@@ -1,0 +1,580 @@
+import { useState, useEffect, useRef, useCallback } from "react";
+
+const FOREX_GROUPS = {
+  "MAJORS":["EUR/USD","GBP/USD","USD/JPY","USD/CHF","AUD/USD","USD/CAD","NZD/USD"],
+  "EUR CROSSES":["EUR/GBP","EUR/JPY","EUR/CHF","EUR/AUD","EUR/CAD","EUR/NZD","EUR/SEK","EUR/NOK","EUR/DKK","EUR/PLN","EUR/TRY","EUR/SGD","EUR/ZAR","EUR/MXN"],
+  "GBP CROSSES":["GBP/JPY","GBP/CHF","GBP/AUD","GBP/CAD","GBP/NZD","GBP/SEK","GBP/NOK","GBP/PLN","GBP/ZAR","GBP/SGD","GBP/TRY"],
+  "JPY CROSSES":["AUD/JPY","CAD/JPY","CHF/JPY","NZD/JPY","SGD/JPY"],
+  "AUD/NZD":["AUD/NZD","AUD/CHF","AUD/CAD","AUD/SGD","NZD/CHF","NZD/CAD","NZD/SGD"],
+  "CAD/CHF":["CAD/CHF","CAD/SGD","CHF/SGD"],
+  "EXOTIQUES":["USD/MXN","USD/ZAR","USD/SEK","USD/NOK","USD/SGD","USD/HKD","USD/PLN","USD/TRY","EUR/HKD","GBP/HKD"]
+};
+const ALL_PAIRS = [...new Set(Object.values(FOREX_GROUPS).flat())];
+const ALL_CURRENCIES = [...new Set(ALL_PAIRS.flatMap(p=>p.split("/")))].sort();
+const DEFAULT_PAIRS = ["EUR/USD","GBP/USD","USD/JPY","USD/CHF","AUD/USD","USD/CAD","NZD/USD"];
+
+const getPip = p => p.split("/")[1]==="JPY"?.01:.0001;
+const calcPips = (c,r,p)=>r?Math.round((c-r)/getPip(p)):null;
+const cross = (b,q,r)=>r[b]&&r[q]?r[q]/r[b]:null;
+const fmt = (r,p)=>r==null?"—":p.split("/")[1]==="JPY"?r.toFixed(3):r.toFixed(5);
+const fmtT = d=>d.toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit",second:"2-digit"});
+const pipCol = p=>p==null?"#2e5070":p>0?"#00e87c":p<0?"#ff2850":"#5a8aaa";
+
+const C={bg:"#020c16",panel:"#05111f",card:"#081828",border:"#0f2438",b2:"#163550",
+  bright:"#c0daf5",mid:"#5a8aaa",dim:"#264560",green:"#00e87c",red:"#ff2850",
+  amber:"#f5b000",blue:"#1a85ff",mono:"'IBM Plex Mono','Fira Code',monospace"};
+
+const btn=(bg,col,extra={})=>({background:bg,color:col,border:"none",borderRadius:4,
+  cursor:"pointer",fontFamily:C.mono,fontSize:10,letterSpacing:".5px",fontWeight:500,
+  padding:"5px 10px",transition:"opacity .15s",...extra});
+
+function PipsBar({pips}){
+  const pct=Math.min(Math.abs(pips||0)/300*100,100),col=pipCol(pips);
+  return(<div style={{height:2,background:C.border,borderRadius:2,marginTop:7}}>
+    <div style={{width:`${pct}%`,height:"100%",background:col,borderRadius:2,transition:"width .5s"}}/>
+  </div>);
+}
+
+function PairCard({pair,curr,pips,onRemove,fired}){
+  const col=pipCol(pips);
+  return(<div style={{background:C.card,borderRadius:6,padding:"12px 13px",position:"relative",
+    border:`1px solid ${fired?C.amber:pips&&pips!==0?col+"44":C.border}`,
+    borderLeft:`3px solid ${fired?C.amber:col}`,
+    boxShadow:fired?`0 0 16px ${C.amber}40`:"none",transition:"all .3s"}}>
+    <button onClick={onRemove} style={{position:"absolute",top:6,right:8,background:"none",
+      border:"none",color:C.dim,cursor:"pointer",fontSize:10,padding:"1px 5px",fontFamily:C.mono}}>✕</button>
+    <div style={{fontSize:10,fontWeight:600,color:C.mid,letterSpacing:"2px",marginBottom:4,fontFamily:C.mono}}>{pair}</div>
+    <div style={{fontSize:12,color:C.dim,marginBottom:4,fontFamily:C.mono}}>{fmt(curr,pair)}</div>
+    <div style={{display:"flex",alignItems:"baseline",gap:4}}>
+      <span style={{fontSize:21,fontWeight:700,color:col,fontFamily:C.mono}}>
+        {pips==null?"—":(pips>0?"+":"")+pips}
+      </span>
+      <span style={{fontSize:9,color:C.dim,fontFamily:C.mono}}>PIPS</span>
+      {pips!=null&&pips!==0&&<span style={{fontSize:12,color:col}}>{pips>0?"▲":"▼"}</span>}
+    </div>
+    <PipsBar pips={pips}/>
+    {fired&&<div style={{fontFamily:C.mono,marginTop:5,fontSize:9,color:C.amber,letterSpacing:"1px"}}>⚡ SEUIL ATTEINT</div>}
+  </div>);
+}
+
+function AlertRow({alert,pips,onToggle,onRemove}){
+  const abs=pips!=null?Math.abs(pips):null;
+  const reached=abs!=null&&alert.enabled&&abs>=alert.pips;
+  const ac=alert.enabled?(reached?C.amber:C.blue):C.dim;
+  return(<div style={{background:C.card,borderRadius:5,padding:"10px 12px",
+    border:`1px solid ${reached?C.amber:C.border}`,borderLeft:`3px solid ${ac}`,
+    display:"flex",alignItems:"center",gap:8,transition:"border .3s"}}>
+    <div style={{flex:1,fontFamily:C.mono}}>
+      <div style={{fontSize:12,fontWeight:600,color:C.bright}}>{alert.pair}</div>
+      <div style={{fontSize:10,color:C.dim,marginTop:2}}>
+        {alert.pips} pips · {alert.dir==="both"?"↕":alert.dir==="up"?"▲":"▼"}
+        {pips!=null&&<span style={{color:reached?C.amber:C.dim}}> · {pips>0?"+":""}{pips} now</span>}
+      </div>
+    </div>
+    <button onClick={()=>onToggle(alert.id)} style={{...btn(alert.enabled?C.amber+"33":"#111",alert.enabled?C.amber:C.dim),
+      border:`1px solid ${alert.enabled?C.amber:C.b2}`,borderRadius:10,padding:"3px 10px"}}>
+      {alert.enabled?"ON":"OFF"}
+    </button>
+    <button onClick={()=>onRemove(alert.id)} style={btn(C.red+"22",C.red)}>✕</button>
+  </div>);
+}
+
+export default function App(){
+  const [rates,setRates]=useState({});
+  const [ref,setRef]=useState({});
+  const [pairs,setPairs]=useState(DEFAULT_PAIRS);
+  const [alerts,setAlerts]=useState([
+    {id:1,pair:"EUR/USD",pips:100,dir:"both",enabled:true},
+    {id:2,pair:"GBP/USD",pips:80,dir:"both",enabled:true},
+    {id:3,pair:"USD/JPY",pips:100,dir:"both",enabled:true},
+  ]);
+  const [log,setLog]=useState([]);
+  const [tab,setTab]=useState("dash");
+  const [catGrp,setCatGrp]=useState("TOUS");
+  const [catQ,setCatQ]=useState("");
+  const [lastUp,setLastUp]=useState(null);
+  const [loading,setLoading]=useState(true);
+  const [err,setErr]=useState(null);
+  const [secs,setSecs]=useState(30);
+  const [paused,setPaused]=useState(false);
+  const [notifOk,setNotifOk]=useState(false);
+  const [newLogs,setNewLogs]=useState(0);
+  const [alBase,setAlBase]=useState("GBP");
+  const [alQuote,setAlQuote]=useState("AUD");
+  const [alPips,setAlPips]=useState(120);
+  const [alDir,setAlDir]=useState("both");
+  const [webhook,setWebhook]=useState("");
+  const [webhookSt,setWebhookSt]=useState("");
+  const [tdKey,setTdKey]=useState("");
+  const [tdSt,setTdSt]=useState("");
+
+  const fired=useRef(new Set());
+  const refR=useRef({});
+  const alertsR=useRef(alerts);
+  const tdWs=useRef(null);
+  const tdOn=useRef(false);
+  useEffect(()=>{alertsR.current=alerts;},[alerts]);
+
+  const getP=(pair,r,rf)=>{
+    const [b,q]=pair.split("/");
+    const c=cross(b,q,r),rv=cross(b,q,rf);
+    return{curr:c,ref:rv,pips:c&&rv?calcPips(c,rv,pair):null};
+  };
+
+  const sendDiscord=(alert,pips,abs,price)=>{
+    if(!webhook)return;
+    fetch(webhook,{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({embeds:[{
+        title:`⚡ ALERTE FOREX — ${alert.pair}`,
+        color:pips>0?0x00e87c:0xff2850,
+        fields:[
+          {name:"📊 Mouvement",value:`**${pips>0?"+":""}${pips} pips** ${pips>0?"▲ HAUSSE":"▼ BAISSE"}`,inline:true},
+          {name:"🎯 Seuil",value:`${alert.pips} pips`,inline:true},
+          {name:"💰 Prix",value:fmt(price,alert.pair),inline:true},
+          {name:"🕐 Heure",value:fmtT(new Date()),inline:true},
+        ],
+        footer:{text:"ForexPIP Tracker"},timestamp:new Date().toISOString()
+      }]})
+    }).catch(()=>{});
+  };
+
+  const checkAlerts=useCallback((r)=>{
+    const rf=refR.current;
+    if(!Object.keys(rf).length)return;
+    alertsR.current.forEach(a=>{
+      if(!a.enabled)return;
+      const [b,q]=a.pair.split("/");
+      const c=cross(b,q,r),rv=cross(b,q,rf);
+      if(!c||!rv)return;
+      const pips=calcPips(c,rv,a.pair);
+      if(pips==null)return;
+      const abs=Math.abs(pips),bucket=Math.floor(abs/a.pips),key=`${a.id}-${bucket}`;
+      if(bucket>0&&!fired.current.has(key)){
+        const ok=a.dir==="both"||(a.dir==="up"&&pips>0)||(a.dir==="down"&&pips<0);
+        if(ok){
+          fired.current.add(key);
+          const entry={id:Date.now(),pair:a.pair,pips:abs,dir:pips>0?"▲":"▼",threshold:a.pips,price:c,time:new Date()};
+          setLog(p=>[entry,...p].slice(0,60));
+          setNewLogs(n=>n+1);
+          if(Notification?.permission==="granted")
+            new Notification(`⚡ ${a.pair} — ${abs} pips`,{body:`Seuil ${a.pips} pips ${pips>0?"▲":"▼"} @ ${fmt(c,a.pair)}`});
+          sendDiscord(a,pips,abs,c);
+        }
+      }
+    });
+  },[webhook]);
+
+  const fetch_=useCallback(async()=>{
+    try{
+      const res=await fetch("https://open.er-api.com/v6/latest/USD");
+      const data=await res.json();
+      if(data.result!=="success")throw new Error("API error");
+      const r={...data.rates,USD:1};
+      setRates(r);setLastUp(new Date());setErr(null);setLoading(false);
+      setRef(prev=>{if(!Object.keys(prev).length){refR.current=r;return r;}return prev;});
+      checkAlerts(r);
+    }catch(e){setErr(e.message);setLoading(false);}
+  },[checkAlerts]);
+
+  useEffect(()=>{
+    fetch_();
+    if(Notification?.permission==="granted")setNotifOk(true);
+    else if(Notification?.permission!=="denied")
+      Notification?.requestPermission().then(p=>setNotifOk(p==="granted"));
+  },[fetch_]);
+
+  useEffect(()=>{
+    if(paused)return;
+    const t=setInterval(()=>{if(!tdOn.current)fetch_();},secs*1000);
+    return()=>clearInterval(t);
+  },[paused,secs,fetch_]);
+
+  useEffect(()=>{if(tab==="journal")setNewLogs(0);},[tab]);
+
+  const connectTD=(key)=>{
+    if(tdWs.current){tdWs.current.close();tdWs.current=null;tdOn.current=false;}
+    if(!key)return;
+    const symbols=pairs.map(p=>p.replace("/","/")).join(",");
+    const ws=new WebSocket(`wss://ws.twelvedata.com/v1/quotes/price?apikey=${key}`);
+    ws.onopen=()=>{
+      ws.send(JSON.stringify({action:"subscribe",params:{symbols}}));
+      tdOn.current=true;setTdSt("✓ Connecté — données live");
+    };
+    ws.onmessage=(e)=>{
+      try{const m=JSON.parse(e.data);
+        if(m.event==="price"&&m.price){
+          const pair=m.symbol?.replace(":","/");
+          if(pair){
+            setRates(prev=>({...prev,_td:{...(prev._td||{}),[pair]:parseFloat(m.price)}}));
+            setLastUp(new Date());
+          }
+        }
+      }catch(_){}
+    };
+    ws.onerror=()=>setTdSt("⚠ Erreur clé API");
+    ws.onclose=()=>{tdOn.current=false;};
+    tdWs.current=ws;
+  };
+
+  const resetRef=()=>{
+    fired.current.clear();refR.current={...rates};
+    setRef({...rates});setLog([]);setNewLogs(0);
+  };
+
+  const pairData=pairs.map(p=>{
+    const [b,q]=p.split("/");
+    const tdP=rates._td&&rates._td[p];
+    const refTd=ref._td&&ref._td[p];
+    const curr=tdP??cross(b,q,rates);
+    const rv=refTd??cross(b,q,ref);
+    return{pair:p,curr,pips:curr&&rv?calcPips(curr,rv,p):null};
+  });
+
+  const catPairs=ALL_PAIRS.filter(p=>{
+    if(catGrp!=="TOUS"&&!FOREX_GROUPS[catGrp]?.includes(p))return false;
+    if(catQ&&!p.toLowerCase().includes(catQ.toLowerCase()))return false;
+    return true;
+  });
+
+  const Tb=({id,label,badge})=>(
+    <button onClick={()=>setTab(id)} style={{background:"none",color:tab===id?C.blue:C.dim,
+      border:"none",borderBottom:`2px solid ${tab===id?C.blue:"transparent"}`,
+      fontFamily:C.mono,fontSize:10,letterSpacing:"1.5px",fontWeight:tab===id?600:400,
+      cursor:"pointer",padding:"11px 14px",borderRadius:0,transition:"color .2s",
+      position:"relative",whiteSpace:"nowrap"}}>
+      {label}
+      {badge>0&&<span style={{position:"absolute",top:6,right:3,background:C.amber,color:"#000",
+        borderRadius:"50%",width:14,height:14,display:"flex",alignItems:"center",
+        justifyContent:"center",fontSize:8,fontWeight:700}}>{badge>9?"9+":badge}</span>}
+    </button>
+  );
+
+  return(
+  <div style={{fontFamily:C.mono,background:C.bg,minHeight:"100vh",color:C.dim}}>
+    <style>{`
+      @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600;700&display=swap');
+      *{box-sizing:border-box}
+      ::-webkit-scrollbar{width:4px;height:4px}
+      ::-webkit-scrollbar-track{background:${C.panel}}
+      ::-webkit-scrollbar-thumb{background:${C.border};border-radius:2px}
+      select option{background:${C.panel};color:${C.bright}}
+      input{outline:none}
+      @keyframes glow{0%,100%{box-shadow:0 0 8px rgba(245,176,0,.3)}50%{box-shadow:0 0 20px rgba(245,176,0,.6)}}
+    `}</style>
+
+    {/* HEADER */}
+    <div style={{background:C.panel,borderBottom:`1px solid ${C.border}`,padding:"12px 20px",
+      display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:10,
+      position:"sticky",top:0,zIndex:50}}>
+      <div>
+        <div style={{fontSize:9,color:loading?C.amber:err?C.red:C.green,letterSpacing:4,marginBottom:2}}>
+          {loading?"◌ CONNEXION...":err?`⚠ ${err}`:"● LIVE"}
+        </div>
+        <div style={{fontSize:18,fontWeight:700,color:C.bright,letterSpacing:4,fontFamily:"'IBM Plex Mono',monospace"}}>
+          FOREX<span style={{color:C.blue}}>PIP</span>TRACKER
+        </div>
+      </div>
+      <div style={{display:"flex",flexDirection:"column",alignItems:"flex-end",gap:6}}>
+        {lastUp&&<div style={{fontSize:10,color:C.green}}>MÀJ {fmtT(lastUp)}</div>}
+        <div style={{display:"flex",gap:6,flexWrap:"wrap",justifyContent:"flex-end"}}>
+          {!notifOk&&<button onClick={()=>Notification?.requestPermission().then(p=>setNotifOk(p==="granted"))}
+            style={btn(C.amber+"22",C.amber,{border:`1px solid ${C.amber}44`})}>🔔 NOTIFS</button>}
+          <button onClick={()=>setPaused(p=>!p)}
+            style={btn(paused?C.amber+"22":"#111",paused?C.amber:C.mid)}>
+            {paused?"▶ REPRENDRE":"⏸ PAUSE"}
+          </button>
+          <button onClick={resetRef} style={btn("#111",C.mid)}>↺ RESET RÉF</button>
+          <button onClick={fetch_} style={btn(C.green+"22",C.green)}>⟳ REFRESH</button>
+        </div>
+      </div>
+    </div>
+
+    {/* TABS */}
+    <div style={{background:C.panel,borderBottom:`1px solid ${C.border}`,display:"flex",paddingLeft:8,overflowX:"auto"}}>
+      <Tb id="dash" label="DASHBOARD"/>
+      <Tb id="catalogue" label="CATALOGUE"/>
+      <Tb id="alertes" label="ALERTES"/>
+      <Tb id="discord" label="DISCORD"/>
+      <Tb id="journal" label="JOURNAL" badge={newLogs}/>
+      <Tb id="config" label="CONFIG"/>
+    </div>
+
+    <div style={{padding:16,maxWidth:1400,margin:"0 auto"}}>
+
+      {/* DASHBOARD */}
+      {tab==="dash"&&(
+        <div>
+          <div style={{display:"flex",gap:18,padding:"9px 14px",background:C.panel,
+            border:`1px solid ${C.border}`,borderRadius:6,marginBottom:14,flexWrap:"wrap",fontSize:10}}>
+            <span style={{color:C.mid}}>Paires: <span style={{color:C.bright}}>{pairs.length}</span></span>
+            <span style={{color:C.mid}}>Alertes ON: <span style={{color:C.blue}}>{alerts.filter(a=>a.enabled).length}</span></span>
+            <span style={{color:C.mid}}>Déclenchements: <span style={{color:C.amber}}>{log.length}</span></span>
+            <span style={{color:C.mid}}>Discord: <span style={{color:webhook?C.green:C.dim}}>{webhook?"ON":"OFF"}</span></span>
+            <span style={{color:C.mid}}>Refresh: <span style={{color:paused?C.amber:C.green}}>{paused?"PAUSE":`${secs}s`}</span></span>
+          </div>
+          {loading?(
+            <div style={{textAlign:"center",padding:60,color:C.amber,letterSpacing:3,fontSize:12}}>CHARGEMENT...</div>
+          ):(
+            <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(172px,1fr))",gap:10}}>
+              {pairData.map(({pair,curr,pips})=>(
+                <PairCard key={pair} pair={pair} curr={curr} pips={pips}
+                  fired={alerts.some(a=>a.enabled&&a.pair===pair&&pips!=null&&Math.abs(pips)>=a.pips)}
+                  onRemove={()=>setPairs(p=>p.filter(x=>x!==pair))}/>
+              ))}
+              <div onClick={()=>setTab("catalogue")} style={{background:"transparent",
+                border:`1px dashed ${C.b2}`,borderRadius:6,display:"flex",alignItems:"center",
+                justifyContent:"center",cursor:"pointer",minHeight:110,color:C.dim,fontSize:10,
+                letterSpacing:1,transition:"all .2s"}}
+                onMouseEnter={e=>{e.currentTarget.style.borderColor=C.blue;e.currentTarget.style.color=C.blue;}}
+                onMouseLeave={e=>{e.currentTarget.style.borderColor=C.b2;e.currentTarget.style.color=C.dim;}}>
+                + AJOUTER PAIRE
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* CATALOGUE */}
+      {tab==="catalogue"&&(
+        <div>
+          <div style={{marginBottom:12,display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
+            <input value={catQ} onChange={e=>setCatQ(e.target.value)} placeholder="Rechercher ex: GBP..."
+              style={{background:C.panel,border:`1px solid ${C.b2}`,color:C.bright,
+                fontFamily:C.mono,borderRadius:4,padding:"6px 10px",fontSize:11,width:185}}/>
+            {["TOUS",...Object.keys(FOREX_GROUPS)].map(g=>(
+              <button key={g} onClick={()=>setCatGrp(g)} style={{
+                background:catGrp===g?C.blue:C.panel,color:catGrp===g?"#fff":C.mid,
+                border:`1px solid ${catGrp===g?C.blue:C.b2}`,borderRadius:4,
+                cursor:"pointer",fontFamily:C.mono,fontSize:9,letterSpacing:"1px",padding:"4px 9px"}}>
+                {g}
+              </button>
+            ))}
+          </div>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(138px,1fr))",gap:8}}>
+            {catPairs.map(pair=>{
+              const inD=pairs.includes(pair);
+              const [b,q]=pair.split("/");
+              const c=cross(b,q,rates),rv=cross(b,q,ref);
+              const pips=c&&rv?calcPips(c,rv,pair):null;
+              const col=pipCol(pips);
+              return(
+                <div key={pair} style={{background:C.card,borderRadius:5,padding:"9px 10px",
+                  border:`1px solid ${inD?C.blue:C.border}`,borderLeft:`2px solid ${inD?C.blue:col}`,
+                  display:"flex",flexDirection:"column",gap:4,transition:"border .2s"}}>
+                  <div style={{display:"flex",justifyContent:"space-between"}}>
+                    <span style={{fontFamily:C.mono,fontSize:10,fontWeight:600,color:C.bright,letterSpacing:1}}>{pair}</span>
+                    {inD&&<span style={{fontSize:8,color:C.blue}}>●</span>}
+                  </div>
+                  <div style={{fontFamily:C.mono,fontSize:10,color:C.dim}}>{fmt(c,pair)}</div>
+                  {pips!=null&&<div style={{fontFamily:C.mono,fontSize:10,color:col,fontWeight:600}}>{pips>0?"+":""}{pips} pips</div>}
+                  <button onClick={()=>{
+                    if(inD)setPairs(p=>p.filter(x=>x!==pair));
+                    else setPairs(p=>[...p,pair]);
+                  }} style={{...btn(inD?C.red+"22":C.green+"22",inD?C.red:C.green),marginTop:2,fontSize:9}}>
+                    {inD?"RETIRER":"+ AJOUTER"}
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* ALERTES */}
+      {tab==="alertes"&&(
+        <div style={{display:"grid",gridTemplateColumns:"290px 1fr",gap:14,alignItems:"start"}}>
+          <div style={{background:C.panel,border:`1px solid ${C.border}`,borderRadius:6,padding:14}}>
+            <div style={{fontSize:10,color:C.blue,letterSpacing:3,marginBottom:12}}>NOUVELLE ALERTE</div>
+            <div style={{display:"flex",gap:6,alignItems:"center",marginBottom:10,flexWrap:"wrap"}}>
+              <select value={alBase} onChange={e=>setAlBase(e.target.value)}
+                style={{background:C.card,border:`1px solid ${C.b2}`,color:C.bright,fontFamily:C.mono,borderRadius:4,padding:"5px 7px",fontSize:11}}>
+                {ALL_CURRENCIES.map(c=><option key={c}>{c}</option>)}
+              </select>
+              <span style={{color:C.dim}}>/</span>
+              <select value={alQuote} onChange={e=>setAlQuote(e.target.value)}
+                style={{background:C.card,border:`1px solid ${C.b2}`,color:C.bright,fontFamily:C.mono,borderRadius:4,padding:"5px 7px",fontSize:11}}>
+                {ALL_CURRENCIES.map(c=><option key={c}>{c}</option>)}
+              </select>
+            </div>
+            <div style={{display:"flex",gap:6,alignItems:"center",marginBottom:12,flexWrap:"wrap"}}>
+              <input type="number" value={alPips} min={1} max={9999} onChange={e=>setAlPips(Number(e.target.value))}
+                style={{background:C.card,border:`1px solid ${C.b2}`,color:C.bright,fontFamily:C.mono,borderRadius:4,padding:"5px 7px",fontSize:11,width:80}}/>
+              <span style={{fontSize:10,color:C.dim}}>pips</span>
+              <select value={alDir} onChange={e=>setAlDir(e.target.value)}
+                style={{background:C.card,border:`1px solid ${C.b2}`,color:C.bright,fontFamily:C.mono,borderRadius:4,padding:"5px 7px",fontSize:11}}>
+                <option value="both">↕ Les deux</option>
+                <option value="up">▲ Hausse</option>
+                <option value="down">▼ Baisse</option>
+              </select>
+            </div>
+            <button onClick={()=>{
+              if(alBase===alQuote||alPips<=0)return;
+              setAlerts(v=>[...v,{id:Date.now(),pair:`${alBase}/${alQuote}`,pips:alPips,dir:alDir,enabled:true}]);
+            }} style={{...btn(C.green,"#000"),width:"100%",padding:"8px",fontSize:11,letterSpacing:1}}>
+              + CRÉER ALERTE
+            </button>
+            <div style={{marginTop:12,padding:10,background:C.card,borderRadius:4,fontSize:10,color:C.dim,lineHeight:1.9}}>
+              <div style={{color:C.mid,marginBottom:3}}>ℹ INFOS</div>
+              <div>• Répète par multiple du seuil</div>
+              <div>• ↺ Reset = pips remis à 0</div>
+              <div>• Push navigateur + Discord</div>
+            </div>
+          </div>
+          <div style={{display:"flex",flexDirection:"column",gap:8}}>
+            {alerts.length===0&&<div style={{color:C.dim,textAlign:"center",padding:50,fontSize:11}}>Aucune alerte</div>}
+            {alerts.map(a=>{
+              const [b,q]=a.pair.split("/");
+              const c=cross(b,q,rates),rv=cross(b,q,ref);
+              const pips=c&&rv?calcPips(c,rv,a.pair):null;
+              return<AlertRow key={a.id} alert={a} pips={pips}
+                onToggle={id=>setAlerts(v=>v.map(x=>x.id===id?{...x,enabled:!x.enabled}:x))}
+                onRemove={id=>setAlerts(v=>v.filter(x=>x.id!==id))}/>;
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* DISCORD */}
+      {tab==="discord"&&(
+        <div style={{maxWidth:540}}>
+          <div style={{background:C.panel,border:`1px solid ${C.border}`,borderRadius:6,padding:18,marginBottom:14}}>
+            <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:14}}>
+              <span style={{fontSize:22}}>🎮</span>
+              <div>
+                <div style={{fontSize:13,fontWeight:600,color:C.bright}}>Discord Webhook</div>
+                <div style={{fontSize:10,color:C.dim}}>Reçois tes alertes dans un channel Discord</div>
+              </div>
+            </div>
+            <label style={{fontSize:10,color:C.mid,display:"block",marginBottom:6,letterSpacing:1}}>URL WEBHOOK</label>
+            <input value={webhook} onChange={e=>setWebhook(e.target.value)} placeholder="https://discord.com/api/webhooks/..."
+              style={{background:C.card,border:`1px solid ${C.b2}`,color:C.bright,fontFamily:C.mono,
+                borderRadius:4,padding:"7px 10px",fontSize:11,width:"100%",marginBottom:8}}/>
+            <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+              <button onClick={async()=>{
+                if(!webhook){setWebhookSt("⚠ Colle d'abord l'URL");return;}
+                setWebhookSt("Envoi en cours...");
+                try{
+                  const r=await fetch(webhook,{method:"POST",headers:{"Content-Type":"application/json"},
+                    body:JSON.stringify({embeds:[{title:"✅ ForexPIP Tracker — Test réussi !",
+                      description:"Webhook configuré correctement. Tu recevras les alertes ici.",
+                      color:0x1a85ff,footer:{text:"ForexPIP Tracker"},timestamp:new Date().toISOString()}]})});
+                  setWebhookSt(r.ok||r.status===204?"✓ Webhook fonctionnel !":"⚠ Erreur HTTP "+r.status);
+                }catch(e){setWebhookSt("⚠ "+e.message);}
+              }} style={btn("rgba(26,133,255,.15)",C.blue,{border:`1px solid rgba(26,133,255,.3)`,padding:"6px 14px",fontSize:11})}>
+                ▶ TEST WEBHOOK
+              </button>
+              <button onClick={()=>{setWebhook("");setWebhookSt("Webhook effacé");}}
+                style={btn(C.red+"22",C.red,{padding:"6px 14px",fontSize:11})}>EFFACER</button>
+            </div>
+            {webhookSt&&<div style={{fontSize:10,marginTop:8,color:webhookSt.includes("✓")?C.green:webhookSt.includes("⚠")?C.amber:C.mid}}>{webhookSt}</div>}
+
+            <div style={{marginTop:18,paddingTop:16,borderTop:`1px solid ${C.border}`}}>
+              <div style={{fontSize:11,color:C.mid,fontWeight:600,marginBottom:10}}>📋 CRÉER UN WEBHOOK DISCORD</div>
+              <div style={{fontSize:10,color:C.dim,lineHeight:2.2}}>
+                <div><span style={{color:C.mid}}>1.</span> Ton serveur Discord → clic droit sur un channel</div>
+                <div><span style={{color:C.mid}}>2.</span> <b style={{color:C.mid}}>Modifier le channel</b> → onglet <b style={{color:C.mid}}>Intégrations</b></div>
+                <div><span style={{color:C.mid}}>3.</span> <b style={{color:C.mid}}>Webhooks</b> → <b style={{color:C.mid}}>Nouveau webhook</b></div>
+                <div><span style={{color:C.mid}}>4.</span> <b style={{color:C.mid}}>Copier l'URL du webhook</b> → colle ci-dessus</div>
+                <div><span style={{color:C.mid}}>5.</span> Clique <b style={{color:C.mid}}>TEST WEBHOOK</b> ✓</div>
+              </div>
+            </div>
+            <div style={{marginTop:14,padding:12,background:C.card,borderRadius:5,borderLeft:`3px solid ${C.amber}`}}>
+              <div style={{fontSize:10,color:C.amber,marginBottom:5,letterSpacing:1}}>⚡ FORMAT DES ALERTES</div>
+              <div style={{fontSize:10,color:C.dim,lineHeight:1.9}}>
+                Embed coloré avec paire · pips · direction · prix · heure
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* JOURNAL */}
+      {tab==="journal"&&(
+        <div>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
+            <div style={{fontSize:10,color:C.mid,letterSpacing:2}}>
+              {log.length} DÉCLENCHEMENT{log.length!==1?"S":""} ENREGISTRÉ{log.length!==1?"S":""}
+            </div>
+            {log.length>0&&<button onClick={()=>setLog([])} style={btn("#111",C.dim)}>VIDER</button>}
+          </div>
+          {log.length===0?(
+            <div style={{textAlign:"center",padding:60,color:C.dim,fontSize:11,letterSpacing:1,lineHeight:2}}>
+              Aucun déclenchement<br/>
+              <span style={{fontSize:9,color:C.border}}>Les alertes apparaîtront ici en temps réel</span>
+            </div>
+          ):(
+            <div style={{display:"flex",flexDirection:"column",gap:7}}>
+              {log.map(e=>(
+                <div key={e.id} style={{background:C.card,borderRadius:5,padding:"10px 13px",
+                  border:`1px solid rgba(245,176,0,.2)`,borderLeft:`3px solid ${C.amber}`}}>
+                  <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
+                    <span style={{fontFamily:C.mono,fontSize:12,fontWeight:600,color:C.bright}}>{e.pair}</span>
+                    <span style={{fontFamily:C.mono,fontSize:10,color:C.dim}}>{fmtT(e.time)}</span>
+                  </div>
+                  <div style={{display:"flex",gap:10,alignItems:"center",fontFamily:C.mono}}>
+                    <span style={{fontSize:13,fontWeight:700,color:C.amber}}>{e.dir} {e.pips} pips</span>
+                    <span style={{fontSize:9,color:C.dim}}>seuil {e.threshold}</span>
+                    <span style={{fontSize:10,color:C.mid}}>@ {fmt(e.price,e.pair)}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* CONFIG */}
+      {tab==="config"&&(
+        <div style={{maxWidth:490,display:"flex",flexDirection:"column",gap:14}}>
+          <div style={{background:C.panel,border:`1px solid ${C.border}`,borderRadius:6,padding:16}}>
+            <div style={{fontSize:10,color:C.blue,letterSpacing:2,marginBottom:12}}>🔑 API TWELVEDATA (TEMPS RÉEL)</div>
+            <div style={{fontSize:10,color:C.dim,marginBottom:10,lineHeight:1.8}}>
+              WebSocket live — clé gratuite sur <b style={{color:C.mid}}>twelvedata.com</b>
+            </div>
+            <input value={tdKey} onChange={e=>setTdKey(e.target.value)} placeholder="Colle ta clé API ici..."
+              style={{background:C.card,border:`1px solid ${C.b2}`,color:C.bright,fontFamily:C.mono,
+                borderRadius:4,padding:"7px 10px",fontSize:11,width:"100%",marginBottom:8}}/>
+            <div style={{display:"flex",gap:8}}>
+              <button onClick={()=>{if(tdKey){setTdSt("Connexion...");connectTD(tdKey);}}}
+                style={btn(C.green+"22",C.green,{border:`1px solid ${C.green}33`,padding:"6px 14px",fontSize:11})}>CONNECTER</button>
+              <button onClick={()=>{setTdKey("");if(tdWs.current){tdWs.current.close();tdWs.current=null;tdOn.current=false;}setTdSt("Déconnecté");}}
+                style={btn(C.red+"22",C.red,{padding:"6px 10px",fontSize:11})}>DÉCO</button>
+            </div>
+            {tdSt&&<div style={{fontSize:10,marginTop:8,color:tdSt.includes("✓")?C.green:tdSt.includes("⚠")?C.red:C.amber}}>{tdSt}</div>}
+          </div>
+          <div style={{background:C.panel,border:`1px solid ${C.border}`,borderRadius:6,padding:16}}>
+            <div style={{fontSize:10,color:C.blue,letterSpacing:2,marginBottom:12}}>RAFRAÎCHISSEMENT FALLBACK</div>
+            <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+              {[10,15,30,60,120].map(s=>(
+                <button key={s} onClick={()=>setSecs(s)} style={{
+                  background:secs===s?C.blue:C.card,color:secs===s?"#fff":C.mid,
+                  border:`1px solid ${secs===s?C.blue:C.b2}`,fontFamily:C.mono,
+                  borderRadius:4,cursor:"pointer",padding:"6px 14px",fontSize:11}}>
+                  {s}s
+                </button>
+              ))}
+            </div>
+          </div>
+          <div style={{background:C.panel,border:`1px solid ${C.border}`,borderRadius:6,padding:16}}>
+            <div style={{fontSize:10,color:C.blue,letterSpacing:2,marginBottom:10}}>NOTIFICATIONS NAVIGATEUR</div>
+            <div style={{display:"flex",alignItems:"center",gap:10}}>
+              <div style={{width:9,height:9,borderRadius:"50%",background:notifOk?C.green:C.dim}}/>
+              <span style={{fontSize:11,color:notifOk?C.green:C.dim}}>{notifOk?"Autorisées":"Désactivées"}</span>
+              {!notifOk&&<button onClick={()=>Notification?.requestPermission().then(p=>setNotifOk(p==="granted"))}
+                style={btn(C.amber+"22",C.amber,{border:`1px solid ${C.amber}44`})}>ACTIVER</button>}
+            </div>
+          </div>
+          <div style={{background:C.panel,border:`1px solid ${C.border}`,borderRadius:6,padding:16}}>
+            <div style={{fontSize:10,color:C.blue,letterSpacing:2,marginBottom:10}}>RÉFÉRENCE SESSION</div>
+            <div style={{fontSize:11,color:C.dim,lineHeight:2,marginBottom:10}}>Remet tous les compteurs à 0 depuis les prix actuels.</div>
+            <button onClick={resetRef} style={btn(C.red+"22",C.red,{padding:"8px 16px",fontSize:11})}>↺ RESET LA RÉFÉRENCE</button>
+          </div>
+          <div style={{fontSize:9,color:C.dim,lineHeight:1.9,padding:"0 2px"}}>
+            Fallback: open.er-api.com · Live: TwelveData WebSocket · Adapté aux mouvements 50+ pips
+          </div>
+        </div>
+      )}
+
+    </div>
+  </div>);
+}
