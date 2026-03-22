@@ -535,79 +535,33 @@ let _lastPairList = "";
 
 function renderDashboard(){
   const grid=document.getElementById("pair-grid");
-  const pairListKey = activePairs.join(",");
-
-  // Rebuild full grid only if pairs list changed
-  if(pairListKey !== _lastPairList){
-    _lastPairList = pairListKey;
-    let html="";
-    activePairs.forEach(pair=>{
-      const id="card-"+pair.replace("/","_");
-      html+=`<div class="pair-card" id="${id}">
-        <button class="rm" onclick="removePair('${pair}')">✕</button>
-        <div class="pair-name">${pair}</div>
-        <div class="pair-open" id="${id}-open">Open: —</div>
-        <div class="pair-price" id="${id}-price">—</div>
-        <div class="pair-pips">
-          <span class="pips-val" id="${id}-pips" style="color:var(--dim)">—</span>
-          <span class="pips-label">PIPS</span>
-          <span id="${id}-arrow" style="font-size:11px;margin-left:2px"></span>
-        </div>
-        <div class="pips-bar-wrap"><div class="pips-bar" id="${id}-bar" style="width:0%"></div></div>
-        <div class="alert-label" id="${id}-alert" style="display:none">⚡ SEUIL ATTEINT</div>
-        <div id="${id}-wait" style="color:var(--dim);font-size:9px;margin-top:4px">En attente...</div>
-      </div>`;
-    });
-    html+=`<div class="add-pair-card" onclick="switchTab('catalogue')"
-      onmouseover="this.style.borderColor='var(--blue)';this.style.color='var(--blue)'"
-      onmouseout="this.style.borderColor='var(--b2)';this.style.color='var(--dim)'">+ AJOUTER PAIRE</div>`;
-    grid.innerHTML=html;
-  }
-
-  // Update only changed values in each card
+  let html="";
   activePairs.forEach(pair=>{
-    const id="card-"+pair.replace("/","_");
-    const card=document.getElementById(id);if(!card)return;
     const curr=getCurrent(pair),open=getOpen(pair);
     const pips=calcPips(curr,open,pair);
     const col=pipCol(pips);
     const fired=alerts.some(a=>a.enabled&&a.pair===pair&&pips!=null&&Math.abs(pips)>=a.pips);
     const pct=Math.min(Math.abs(pips||0)/300*100,100);
-
-    // Card border
-    card.style.borderLeftColor=fired?"var(--amber)":curr?col:"var(--dim)";
-    card.style.borderColor=fired?"rgba(245,176,0,.5)":"";
-    if(fired&&!card.classList.contains("alert-glow"))card.classList.add("alert-glow");
-    else if(!fired)card.classList.remove("alert-glow");
-
-    // Open
-    const openEl=document.getElementById(id+"-open");
-    if(openEl)openEl.textContent="Open: "+fmt(open,pair);
-
-    // Price
-    const priceEl=document.getElementById(id+"-price");
-    if(priceEl)priceEl.textContent=fmt(curr,pair);
-
-    // Pips
-    const pipsEl=document.getElementById(id+"-pips");
-    if(pipsEl){pipsEl.textContent=pips==null?"—":(pips>0?"+":"")+pips;pipsEl.style.color=col;}
-
-    // Arrow
-    const arrowEl=document.getElementById(id+"-arrow");
-    if(arrowEl){arrowEl.textContent=pips!=null&&pips!==0?(pips>0?"▲":"▼"):"";arrowEl.style.color=col;}
-
-    // Bar
-    const barEl=document.getElementById(id+"-bar");
-    if(barEl){barEl.style.width=pct+"%";barEl.style.background=col;}
-
-    // Alert label
-    const alertEl=document.getElementById(id+"-alert");
-    if(alertEl)alertEl.style.display=fired?"block":"none";
-
-    // Wait label
-    const waitEl=document.getElementById(id+"-wait");
-    if(waitEl)waitEl.style.display=curr?"none":"block";
+    html+=`<div class="pair-card ${fired?'alert-glow':''}"
+      style="border-left-color:${fired?'var(--amber)':curr?col:'var(--dim)'};${fired?'border-color:rgba(245,176,0,.5)':''}">
+      <button class="rm" onclick="removePair('${pair}')">✕</button>
+      <div class="pair-name">${pair}</div>
+      <div class="pair-open">Open: ${fmt(open,pair)}</div>
+      <div class="pair-price">${fmt(curr,pair)}</div>
+      <div class="pair-pips">
+        <span class="pips-val" style="color:${col}">${pips==null?"—":(pips>0?"+":"")+pips}</span>
+        <span class="pips-label">PIPS</span>
+        ${pips!=null&&pips!==0?`<span style="font-size:11px;color:${col};margin-left:2px">${pips>0?"▲":"▼"}</span>`:""}
+      </div>
+      <div class="pips-bar-wrap"><div class="pips-bar" style="width:${pct}%;background:${col}"></div></div>
+      ${fired?'<div class="alert-label">⚡ SEUIL ATTEINT</div>':""}
+      ${!curr?'<div style="color:var(--dim);font-size:9px;margin-top:4px">En attente...</div>':""}
+    </div>`;
   });
+  html+=`<div class="add-pair-card" onclick="switchTab('catalogue')"
+    onmouseover="this.style.borderColor='var(--blue)';this.style.color='var(--blue)'"
+    onmouseout="this.style.borderColor='var(--b2)';this.style.color='var(--dim)'">+ AJOUTER PAIRE</div>`;
+  grid.innerHTML=html;
 }
 
 // ══════════════════════════════════════════
