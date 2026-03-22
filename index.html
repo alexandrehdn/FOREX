@@ -102,15 +102,15 @@ button{cursor:pointer;font-family:var(--mono);border:none;border-radius:4px;font
 
 <div id="header">
   <div>
-    <div id="status-dot">◌ CONNEXION...</div>
+    <div id="status-dot">o CONNEXION...</div>
     <div id="logo-text">FOREX<span>PIP</span>TRACKER</div>
   </div>
   <div id="header-right">
     <div id="last-update"></div>
     <div id="header-btns">
-      <button onclick="togglePause()" id="pause-btn" style="background:#111;color:var(--mid)">⏸ PAUSE</button>
-      <button onclick="forceReloadOpens()" style="background:rgba(26,133,255,.1);color:var(--blue)">↺ DAILY OPEN</button>
-      <button onclick="manualFetch()" style="background:rgba(0,232,124,.1);color:var(--green)">⟳ REFRESH</button>
+      <button onclick="togglePause()" id="pause-btn" style="background:#111;color:var(--mid)">|| PAUSE</button>
+      <button onclick="forceReloadOpens()" style="background:rgba(26,133,255,.1);color:var(--blue)">&#x21BA; DAILY OPEN</button>
+      <button onclick="manualFetch()" style="background:rgba(0,232,124,.1);color:var(--green)">~ REFRESH</button>
     </div>
   </div>
 </div>
@@ -128,13 +128,13 @@ button{cursor:pointer;font-family:var(--mono);border:none;border-radius:4px;font
 
   <div id="tab-dashboard-content">
     <div id="stat-bar">
-      <div class="stat-item">Paires: <span id="stat-pairs">—</span></div>
-      <div class="stat-item">Alertes ON: <span id="stat-alerts" style="color:var(--blue)">—</span></div>
-      <div class="stat-item">Déclenchements: <span id="stat-log" style="color:var(--amber)">0</span></div>
-      <div class="stat-item">Source: <span id="stat-source" style="color:var(--mid)">—</span></div>
+      <div class="stat-item">Paires: <span id="stat-pairs">-</span></div>
+      <div class="stat-item">Alertes ON: <span id="stat-alerts" style="color:var(--blue)">-</span></div>
+      <div class="stat-item">Declenchements: <span id="stat-log" style="color:var(--amber)">0</span></div>
+      <div class="stat-item">Source: <span id="stat-source" style="color:var(--mid)">-</span></div>
       <div class="stat-item">Discord: <span id="stat-discord" style="color:var(--dim)">OFF</span></div>
       <div class="stat-item">Telegram: <span id="stat-telegram" style="color:var(--dim)">OFF</span></div>
-      <div class="daily-info" id="daily-info">📅 Pips depuis open daily 00:00 UTC</div>
+      <div class="daily-info" id="daily-info"> Pips depuis open daily 00:00 UTC</div>
     </div>
     <div id="pair-grid"></div>
   </div>
@@ -162,18 +162,18 @@ button{cursor:pointer;font-family:var(--mono);border:none;border-radius:4px;font
           <input type="number" id="al-pips" value="150" min="1" max="9999"/>
           <span style="font-size:10px;color:var(--dim)">pips</span>
           <select id="al-dir">
-            <option value="both">↕ Les deux</option>
-            <option value="up">▲ Hausse</option>
-            <option value="down">▼ Baisse</option>
+            <option value="both">&harr; Les deux</option>
+            <option value="up">&#9650; Hausse</option>
+            <option value="down">&#9660; Baisse</option>
           </select>
         </div>
-        <button onclick="createAlert()" style="background:var(--green);color:#000;width:100%;padding:9px;font-size:11px">+ CRÉER ALERTE</button>
+        <button onclick="createAlert()" style="background:var(--green);color:#000;width:100%;padding:9px;font-size:11px">+ CREER ALERTE</button>
         <div class="info-box">
-          <div style="color:var(--mid);margin-bottom:3px">ℹ INFOS</div>
-          <div>• Pips depuis l'open daily 00:00 UTC</div>
-          <div>• Open et prix = même source</div>
-          <div>• Reset auto chaque minuit UTC</div>
-          <div>• Alertes → Discord + Telegram</div>
+          <div style="color:var(--mid);margin-bottom:3px">i INFOS</div>
+          <div>* Pips depuis l'open daily 00:00 UTC</div>
+          <div>* Open et prix = meme source</div>
+          <div>* Reset auto chaque minuit UTC</div>
+          <div>* Alertes -> Discord + Telegram</div>
         </div>
       </div>
       <div id="alert-list"></div>
@@ -183,42 +183,42 @@ button{cursor:pointer;font-family:var(--mono);border:none;border-radius:4px;font
   <div id="tab-notifs-content" style="display:none">
     <div id="notif-layout">
       <div class="notif-card">
-        <div class="notif-logo">🎮</div>
+        <div class="notif-logo"></div>
         <div class="notif-title">Discord Webhook</div>
-        <div class="notif-sub">Alertes dans un channel Discord.<br>✓ Sauvegardé automatiquement</div>
+        <div class="notif-sub">Alertes dans un channel Discord.<br>OK Sauvegarde automatiquement</div>
         <label style="font-size:10px;color:var(--mid);display:block;margin-bottom:6px">URL WEBHOOK</label>
         <input type="text" id="webhook-input" placeholder="https://discord.com/api/webhooks/..." oninput="saveWebhook()" style="width:100%;margin-bottom:8px"/>
         <div style="display:flex;gap:7px;flex-wrap:wrap">
-          <button onclick="testWebhook()" style="background:rgba(26,133,255,.15);color:var(--blue);border:1px solid rgba(26,133,255,.3);padding:6px 12px;font-size:11px">▶ TEST</button>
+          <button onclick="testWebhook()" style="background:rgba(26,133,255,.15);color:var(--blue);border:1px solid rgba(26,133,255,.3);padding:6px 12px;font-size:11px">&#9654; TEST</button>
           <button onclick="clearWebhook()" style="background:rgba(255,40,80,.1);color:var(--red);padding:6px 10px;font-size:11px">EFFACER</button>
         </div>
         <div id="discord-status" class="notif-st"></div>
         <div class="step-list">
-          <div><b style="color:var(--mid)">1.</b> Serveur → clic droit channel</div>
-          <div><b style="color:var(--mid)">2.</b> Modifier → Intégrations → Webhooks</div>
-          <div><b style="color:var(--mid)">3.</b> Nouveau webhook → Copier URL</div>
-          <div><b style="color:var(--mid)">4.</b> Coller ci-dessus → TEST ✓</div>
+          <div><b style="color:var(--mid)">1.</b> Serveur -> clic droit channel</div>
+          <div><b style="color:var(--mid)">2.</b> Modifier -> Integrations -> Webhooks</div>
+          <div><b style="color:var(--mid)">3.</b> Nouveau webhook -> Copier URL</div>
+          <div><b style="color:var(--mid)">4.</b> Coller ci-dessus -> TEST OK</div>
         </div>
       </div>
       <div class="notif-card">
-        <div class="notif-logo">✈️</div>
+        <div class="notif-logo">&gt;</div>
         <div class="notif-title">Telegram Bot</div>
-        <div class="notif-sub">Alertes directement dans Telegram.<br>✓ Sauvegardé automatiquement</div>
+        <div class="notif-sub">Alertes directement dans Telegram.<br>OK Sauvegarde automatiquement</div>
         <label style="font-size:10px;color:var(--mid);display:block;margin-bottom:6px">BOT TOKEN</label>
         <input type="text" id="tg-token" placeholder="123456789:ABCdef..." oninput="saveTelegram()" style="width:100%;margin-bottom:8px"/>
         <label style="font-size:10px;color:var(--mid);display:block;margin-bottom:6px">CHAT ID</label>
         <input type="text" id="tg-chatid" placeholder="ex: 123456789" oninput="saveTelegram()" style="width:100%;margin-bottom:8px"/>
         <div style="display:flex;gap:7px;flex-wrap:wrap">
-          <button onclick="testTelegram()" style="background:rgba(0,232,124,.15);color:var(--green);border:1px solid rgba(0,232,124,.3);padding:6px 12px;font-size:11px">▶ TEST</button>
+          <button onclick="testTelegram()" style="background:rgba(0,232,124,.15);color:var(--green);border:1px solid rgba(0,232,124,.3);padding:6px 12px;font-size:11px">&#9654; TEST</button>
           <button onclick="clearTelegram()" style="background:rgba(255,40,80,.1);color:var(--red);padding:6px 10px;font-size:11px">EFFACER</button>
         </div>
         <div id="telegram-status" class="notif-st"></div>
         <div class="step-list">
-          <div><b style="color:var(--mid)">1.</b> Telegram → <b style="color:var(--mid)">@BotFather</b></div>
-          <div><b style="color:var(--mid)">2.</b> /newbot → choisis un nom</div>
-          <div><b style="color:var(--mid)">3.</b> Copie le token → colle ci-dessus</div>
-          <div><b style="color:var(--mid)">4.</b> <b style="color:var(--mid)">@userinfobot</b> → /start → copie ID</div>
-          <div><b style="color:var(--mid)">5.</b> Colle Chat ID → TEST ✓</div>
+          <div><b style="color:var(--mid)">1.</b> Telegram -> <b style="color:var(--mid)">@BotFather</b></div>
+          <div><b style="color:var(--mid)">2.</b> /newbot -> choisis un nom</div>
+          <div><b style="color:var(--mid)">3.</b> Copie le token -> colle ci-dessus</div>
+          <div><b style="color:var(--mid)">4.</b> <b style="color:var(--mid)">@userinfobot</b> -> /start -> copie ID</div>
+          <div><b style="color:var(--mid)">5.</b> Colle Chat ID -> TEST OK</div>
         </div>
       </div>
     </div>
@@ -226,33 +226,33 @@ button{cursor:pointer;font-family:var(--mono);border:none;border-radius:4px;font
 
   <div id="tab-journal-content" style="display:none">
     <div id="journal-header">
-      <div style="font-size:10px;color:var(--mid);letter-spacing:2px" id="log-count-label">0 DÉCLENCHEMENTS</div>
+      <div style="font-size:10px;color:var(--mid);letter-spacing:2px" id="log-count-label">0 DECLENCHEMENTS</div>
       <button onclick="clearLog()" style="background:#111;color:var(--dim)">VIDER</button>
     </div>
-    <div id="log-list"><div style="text-align:center;padding:60px;color:var(--dim);font-size:11px;line-height:2">Aucun déclenchement<br><span style="font-size:9px;color:var(--border)">Les alertes apparaîtront ici</span></div></div>
+    <div id="log-list"><div style="text-align:center;padding:60px;color:var(--dim);font-size:11px;line-height:2">Aucun declenchement<br><span style="font-size:9px;color:var(--border)">Les alertes apparaitront ici</span></div></div>
   </div>
 
   <div id="tab-settings-content" style="display:none">
     <div id="settings-layout">
       <div class="panel-box">
-        <div class="settings-title">🔑 FINNHUB API — TEMPS RÉEL</div>
+        <div class="settings-title"> FINNHUB API - TEMPS REEL</div>
         <div style="font-size:10px;color:var(--dim);margin-bottom:10px;line-height:1.8">
-          Prix live + open daily = <b style="color:var(--green)">même source Finnhub</b><br>
-          → Calcul pips 100% cohérent ✓<br>
-          Clé gratuite sur <b style="color:var(--mid)">finnhub.io</b>
+          Prix live + open daily = <b style="color:var(--green)">meme source Finnhub</b><br>
+          -> Calcul pips 100% coherent OK<br>
+          Cle gratuite sur <b style="color:var(--mid)">finnhub.io</b>
         </div>
-        <input type="text" id="fh-key-input" placeholder="Colle ta clé Finnhub ici..." style="width:100%;margin-bottom:8px"/>
+        <input type="text" id="fh-key-input" placeholder="Colle ta cle Finnhub ici..." style="width:100%;margin-bottom:8px"/>
         <div style="display:flex;gap:8px">
           <button onclick="saveFinnhubKey()" style="background:rgba(0,232,124,.15);color:var(--green);border:1px solid rgba(0,232,124,.2);padding:6px 14px;font-size:11px">CONNECTER</button>
-          <button onclick="clearFinnhubKey()" style="background:rgba(255,40,80,.1);color:var(--red);padding:6px 10px;font-size:11px">DÉCO</button>
+          <button onclick="clearFinnhubKey()" style="background:rgba(255,40,80,.1);color:var(--red);padding:6px 10px;font-size:11px">DECO</button>
         </div>
         <div id="fh-status" style="font-size:10px;margin-top:8px;color:var(--dim)"></div>
       </div>
       <div class="panel-box">
         <div class="settings-title">MODE SANS FINNHUB</div>
         <div style="font-size:10px;color:var(--dim);margin-bottom:10px;line-height:1.8">
-          Sans clé : open.er-api uniquement<br>
-          Open et prix = même source → pips cohérents
+          Sans cle : open.er-api uniquement<br>
+          Open et prix = meme source -> pips coherents
         </div>
         <div class="refresh-btns">
           <button class="refresh-btn" onclick="setRefresh(10)">10s</button>
@@ -262,8 +262,8 @@ button{cursor:pointer;font-family:var(--mono);border:none;border-radius:4px;font
         </div>
       </div>
       <div style="font-size:9px;color:var(--dim);line-height:1.9;padding:2px 4px">
-        ✓ Open daily et prix live = toujours la même source<br>
-        ✓ Reset automatique à minuit UTC · Configs sauvegardées
+        OK Open daily et prix live = toujours la meme source<br>
+        OK Reset automatique a minuit UTC &middot; Configs sauvegardees
       </div>
     </div>
   </div>
@@ -271,9 +271,9 @@ button{cursor:pointer;font-family:var(--mono);border:none;border-radius:4px;font
 </div>
 
 <script>
-// ══════════════════════════════════════════
+// ==========================================
 // PAIRES
-// ══════════════════════════════════════════
+// ==========================================
 const FOREX_GROUPS={
   "MAJORS":["EUR/USD","GBP/USD","USD/JPY","USD/CHF","AUD/USD","USD/CAD","NZD/USD"],
   "EUR CROSSES":["EUR/GBP","EUR/JPY","EUR/CHF","EUR/AUD","EUR/CAD","EUR/NZD","EUR/SEK","EUR/NOK","EUR/DKK","EUR/PLN","EUR/HUF","EUR/CZK","EUR/TRY","EUR/SGD","EUR/ZAR","EUR/MXN"],
@@ -286,18 +286,18 @@ const ALL_PAIRS=[...new Set(Object.values(FOREX_GROUPS).flat())];
 const ALL_CURRENCIES=[...new Set(ALL_PAIRS.flatMap(p=>p.split("/")))].sort();
 const DEFAULT_PAIRS=["EUR/USD","GBP/USD","USD/JPY","USD/CHF","AUD/USD","USD/CAD","NZD/USD"];
 
-// ══════════════════════════════════════════
+// ==========================================
 // LOCALSTORAGE
-// ══════════════════════════════════════════
+// ==========================================
 function loadLS(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d;}catch(e){return d;}}
 function saveLS(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
 
-// ══════════════════════════════════════════
+// ==========================================
 // STATE
-// ══════════════════════════════════════════
-// RÈGLE FONDAMENTALE : open et current doivent toujours venir de la même source
-// Mode A : Finnhub connecté  → fhPrice[pair] + fhOpen[pair]
-// Mode B : Fallback uniquement → fbPrice[pair] + fbOpen[pair]
+// ==========================================
+// REGLE FONDAMENTALE : open et current doivent toujours venir de la meme source
+// Mode A : Finnhub connecte  -> fhPrice[pair] + fhOpen[pair]
+// Mode B : Fallback uniquement -> fbPrice[pair] + fbOpen[pair]
 
 let fhPrice  = {};  // Finnhub live prices (WebSocket)
 let fhOpen   = {};  // Finnhub daily open (REST candle)
@@ -316,18 +316,18 @@ let currentCatGroup="TOUS";
 let fhWs=null,fhConnected=false,fhReconnTimer=null;
 let currentDayUTC=-1;
 
-// ══════════════════════════════════════════
+// ==========================================
 // PIP UTILS
-// ══════════════════════════════════════════
+// ==========================================
 const getPip  = p => p.split("/")[1]==="JPY" ? 0.01 : 0.0001;
 const calcPips= (c,o,p) => (c&&o) ? Math.round((c-o)/getPip(p)) : null;
-const fmt     = (r,p) => r==null?"—":p.split("/")[1]==="JPY"?r.toFixed(3):r.toFixed(5);
+const fmt     = (r,p) => r==null?"-":p.split("/")[1]==="JPY"?r.toFixed(3):r.toFixed(5);
 const fmtT    = d => d.toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit",second:"2-digit"});
 const pipCol  = p => p==null?"var(--dim)":p>0?"var(--green)":p<0?"var(--red)":"var(--mid)";
 
-// ══════════════════════════════════════════
-// PRIX ET OPEN — toujours cohérents
-// ══════════════════════════════════════════
+// ==========================================
+// PRIX ET OPEN - toujours coherents
+// ==========================================
 function getCurrent(pair) {
   if(fhConnected && fhPrice[pair]) return fhPrice[pair];
   // Fallback cross via USD
@@ -337,20 +337,20 @@ function getCurrent(pair) {
 }
 
 function getOpen(pair) {
-  // IMPORTANT : retourne l'open de la MÊME source que getCurrent
+  // IMPORTANT : retourne l'open de la MEME source que getCurrent
   if(fhConnected) {
-    return fhOpen[pair] || null; // uniquement Finnhub si connecté
+    return fhOpen[pair] || null; // uniquement Finnhub si connecte
   } else {
-    // Fallback : open cross via USD (même source que getCurrent)
+    // Fallback : open cross via USD (meme source que getCurrent)
     const [b,q] = pair.split("/");
     if(fbOpen[b] && fbOpen[q]) return fbOpen[q]/fbOpen[b];
     return null;
   }
 }
 
-// ══════════════════════════════════════════
-// FINNHUB — Daily open via REST candle
-// ══════════════════════════════════════════
+// ==========================================
+// FINNHUB - Daily open via REST candle
+// ==========================================
 async function fetchFHOpen(pair, key) {
   try {
     const sym  = "OANDA:" + pair.replace("/","_");
@@ -372,30 +372,30 @@ async function loadAllFHOpens(key) {
   setFhSt("Chargement opens daily...","var(--amber)");
   const results = await Promise.allSettled(activePairs.map(p => fetchFHOpen(p, key)));
   const ok = results.filter(r=>r.value===true).length;
-  // Compléter les opens manquants avec le premier prix WebSocket reçu
+  // Completer les opens manquants avec le premier prix WebSocket recu
   activePairs.forEach(p => { if(!fhOpen[p] && fhPrice[p]) fhOpen[p] = fhPrice[p]; });
-  setFhSt(`✓ ${Object.keys(fhOpen).length}/${activePairs.length} opens chargés`,"var(--green)");
+  setFhSt(`OK ${Object.keys(fhOpen).length}/${activePairs.length} opens charges`,"var(--green)");
   renderDashboard();
   renderAlertList();
 }
 
-// ══════════════════════════════════════════
-// FALLBACK — open.er-api
-// ══════════════════════════════════════════
+// ==========================================
+// FALLBACK - open.er-api
+// ==========================================
 async function fetchFallback() {
   try {
     const res  = await fetch("https://open.er-api.com/v6/latest/USD");
     const data = await res.json();
     if(data.result!=="success") throw new Error();
     fbRates = {...data.rates, USD:1};
-    // Si l'open fallback n'est pas encore défini pour aujourd'hui, on le snapshote
+    // Si l'open fallback n'est pas encore defini pour aujourd'hui, on le snapshote
     if(Object.keys(fbOpen).length===0) {
       fbOpen = {...fbRates};
     }
     document.getElementById("last-update").style.display="block";
-    document.getElementById("last-update").textContent = "MÀJ "+fmtT(new Date());
+    document.getElementById("last-update").textContent = "MAJ "+fmtT(new Date());
     if(!fhConnected) {
-      document.getElementById("stat-source").textContent = "open.er-api (≈1min)";
+      document.getElementById("stat-source").textContent = "open.er-api (~1min)";
       setStatus("live");
     }
     checkMidnightReset();
@@ -404,7 +404,7 @@ async function fetchFallback() {
     if(document.getElementById("tab-catalogue-content").style.display!=="none") renderCatalogue();
     updateStatBar();
   } catch(e) {
-    setStatus("error","⚠ Erreur réseau");
+    setStatus("error","! Erreur reseau");
   }
 }
 
@@ -436,10 +436,10 @@ function connectFinnhub(key) {
     fhReconnAttempts = 0;
     intentionalClose = false;
     activePairs.forEach(p => ws.send(JSON.stringify({type:"subscribe",symbol:"OANDA:"+p.replace("/","_")})));
-    setFhSt("✓ WebSocket live","var(--green)");
-    document.getElementById("stat-source").textContent="Finnhub ● LIVE";
+    setFhSt("OK WebSocket live","var(--green)");
+    document.getElementById("stat-source").textContent="Finnhub &bull; LIVE";
     setStatus("live");
-    // Charge les opens via REST candle (même source Finnhub)
+    // Charge les opens via REST candle (meme source Finnhub)
     loadAllFHOpens(key);
   };
 
@@ -452,7 +452,7 @@ function connectFinnhub(key) {
           const price = parseFloat(t.p);
           if(!price || isNaN(price)) return;
           fhPrice[pair] = price;
-          // Si l'open REST n'a pas pu charger cette paire, on utilise le premier prix reçu
+          // Si l'open REST n'a pas pu charger cette paire, on utilise le premier prix recu
           if(!fhOpen[pair]) fhOpen[pair] = price;
         });
         document.getElementById("last-update").style.display="block";
@@ -489,9 +489,9 @@ function connectFinnhub(key) {
 
 function setFhSt(msg,color){const el=document.getElementById("fh-status");if(el){el.textContent=msg;el.style.color=color;}}
 
-// ══════════════════════════════════════════
+// ==========================================
 // RESET MIDNIGHT UTC
-// ══════════════════════════════════════════
+// ==========================================
 function checkMidnightReset() {
   const d = new Date().getUTCDate();
   if(currentDayUTC===-1){currentDayUTC=d;return;}
@@ -502,7 +502,7 @@ function checkMidnightReset() {
     fbOpen={...fbRates};
     const key = loadLS("fp_fh_key","");
     if(fhConnected && key) loadAllFHOpens(key);
-    flashStatus("↺ NEW DAY — opens reset");
+    flashStatus("&#x21BA; NEW DAY - opens reset");
   }
 }
 
@@ -513,12 +513,12 @@ async function forceReloadOpens() {
   const key = loadLS("fp_fh_key","");
   if(fhConnected && key) await loadAllFHOpens(key);
   else renderDashboard();
-  flashStatus("↺ Opens rechargés");
+  flashStatus("&#x21BA; Opens recharges");
 }
 
-// ══════════════════════════════════════════
+// ==========================================
 // CHECK ALERTS
-// ══════════════════════════════════════════
+// ==========================================
 function checkAlerts(){
   alerts.forEach(a=>{
     if(!a.enabled)return;
@@ -530,7 +530,7 @@ function checkAlerts(){
       const ok=a.dir==="both"||(a.dir==="up"&&pips>0)||(a.dir==="down"&&pips<0);
       if(ok){
         firedKeys.add(key);
-        const entry={id:Date.now(),pair:a.pair,pips:abs,dir:pips>0?"▲":"▼",threshold:a.pips,price:curr,open,time:new Date()};
+        const entry={id:Date.now(),pair:a.pair,pips:abs,dir:pips>0?"&#9650;":"&#9660;",threshold:a.pips,price:curr,open,time:new Date()};
         logEntries.unshift(entry);if(logEntries.length>60)logEntries.pop();
         newLogCount++;updateLogBadge();renderLogList();updateStatBar();
         sendDiscord(a,pips,abs,curr,open);
@@ -540,9 +540,9 @@ function checkAlerts(){
   });
 }
 
-// ══════════════════════════════════════════
-// RENDER DASHBOARD — rebuild only if structure changed
-// ══════════════════════════════════════════
+// ==========================================
+// RENDER DASHBOARD - rebuild only if structure changed
+// ==========================================
 let _lastPairList = "";
 
 function renderDashboard(){
@@ -556,17 +556,17 @@ function renderDashboard(){
     const pct=Math.min(Math.abs(pips||0)/300*100,100);
     html+=`<div class="pair-card ${fired?'alert-glow':''}"
       style="border-left-color:${fired?'var(--amber)':curr?col:'var(--dim)'};${fired?'border-color:rgba(245,176,0,.5)':''}">
-      <button class="rm" onclick="removePair('${pair}')">✕</button>
+      <button class="rm" onclick="removePair('${pair}')">x</button>
       <div class="pair-name">${pair}</div>
       <div class="pair-open">Open: ${fmt(open,pair)}</div>
       <div class="pair-price">${fmt(curr,pair)}</div>
       <div class="pair-pips">
-        <span class="pips-val" style="color:${col}">${pips==null?"—":(pips>0?"+":"")+pips}</span>
+        <span class="pips-val" style="color:${col}">${pips==null?"-":(pips>0?"+":"")+pips}</span>
         <span class="pips-label">PIPS</span>
-        ${pips!=null&&pips!==0?`<span style="font-size:11px;color:${col};margin-left:2px">${pips>0?"▲":"▼"}</span>`:""}
+        ${pips!=null&&pips!==0?`<span style="font-size:11px;color:${col};margin-left:2px">${pips>0?"&#9650;":"&#9660;"}</span>`:""}
       </div>
       <div class="pips-bar-wrap"><div class="pips-bar" style="width:${pct}%;background:${col}"></div></div>
-      ${fired?'<div class="alert-label">⚡ SEUIL ATTEINT</div>':""}
+      ${fired?'<div class="alert-label">! SEUIL ATTEINT</div>':""}
       ${!curr?'<div style="color:var(--dim);font-size:9px;margin-top:4px">En attente...</div>':""}
     </div>`;
   });
@@ -576,9 +576,9 @@ function renderDashboard(){
   grid.innerHTML=html;
 }
 
-// ══════════════════════════════════════════
+// ==========================================
 // RENDER CATALOGUE
-// ══════════════════════════════════════════
+// ==========================================
 function renderCatalogue(){
   const search=(document.getElementById("cat-search")?.value||"").toLowerCase();
   const filtered=ALL_PAIRS.filter(p=>{
@@ -595,7 +595,7 @@ function renderCatalogue(){
         <span class="cat-pair-name">${pair}</span>${inD?'<div class="cat-dot"></div>':""}
       </div>
       <div class="cat-price">${fmt(curr,pair)}</div>
-      ${pips!=null?`<div class="cat-pips" style="color:${col}">${pips>0?"+":""}${pips} pips</div>`:'<div class="cat-pips" style="color:var(--dim)">— pips</div>'}
+      ${pips!=null?`<div class="cat-pips" style="color:${col}">${pips>0?"+":""}${pips} pips</div>`:'<div class="cat-pips" style="color:var(--dim)">- pips</div>'}
       <button class="cat-btn" onclick="togglePair('${pair}')"
         style="background:${inD?'rgba(255,40,80,.1)':'rgba(0,232,124,.1)'};color:${inD?'var(--red)':'var(--green)'}">
         ${inD?"RETIRER":"+ AJOUTER"}</button>
@@ -618,9 +618,9 @@ function togglePair(pair){
 }
 function removePair(pair){activePairs=activePairs.filter(p=>p!==pair);saveLS("fp_pairs",activePairs);renderDashboard();renderCatalogue();updateStatBar();}
 
-// ══════════════════════════════════════════
+// ==========================================
 // ALERTES
-// ══════════════════════════════════════════
+// ==========================================
 function populateAlertForm(){
   const b=document.getElementById("al-base"),q=document.getElementById("al-quote");
   if(b.options.length)return;
@@ -645,26 +645,26 @@ function renderAlertList(){
     return`<div class="alert-row" style="border-left-color:${ac}${reached?';border-color:rgba(245,176,0,.4)':''}">
       <div class="alert-row-info">
         <div class="alert-pair">${a.pair}</div>
-        <div class="alert-meta">${a.pips} pips · ${a.dir==="both"?"↕":a.dir==="up"?"▲":"▼"}
-          ${pips!=null?`· <span style="color:${reached?'var(--amber)':'var(--dim)'}">${pips>0?"+":""}${pips} pips now</span>`:"· <span style='color:var(--dim)'>en attente</span>"}
+        <div class="alert-meta">${a.pips} pips &middot; ${a.dir==="both"?"&harr;":a.dir==="up"?"&#9650;":"&#9660;"}
+          ${pips!=null?`&middot; <span style="color:${reached?'var(--amber)':'var(--dim)'}">${pips>0?"+":""}${pips} pips now</span>`:"&middot; <span style='color:var(--dim)'>en attente</span>"}
         </div>
       </div>
       <button class="toggle-btn ${a.enabled?'toggle-on':'toggle-off'}" onclick="toggleAlert(${a.id})">${a.enabled?"ON":"OFF"}</button>
-      <button class="rm-sm" onclick="removeAlert(${a.id})">✕</button>
+      <button class="rm-sm" onclick="removeAlert(${a.id})">x</button>
     </div>`;
   }).join("");
 }
 function toggleAlert(id){const a=alerts.find(x=>x.id===id);if(a)a.enabled=!a.enabled;saveLS("fp_alerts",alerts);renderAlertList();updateStatBar();}
 function removeAlert(id){alerts=alerts.filter(x=>x.id!==id);saveLS("fp_alerts",alerts);renderAlertList();updateStatBar();}
 
-// ══════════════════════════════════════════
+// ==========================================
 // LOG
-// ══════════════════════════════════════════
+// ==========================================
 function renderLogList(){
   const list=document.getElementById("log-list");if(!list)return;
   const label=document.getElementById("log-count-label");
-  if(label)label.textContent=`${logEntries.length} DÉCLENCHEMENT${logEntries.length!==1?"S":""}`;
-  if(!logEntries.length){list.innerHTML=`<div style="text-align:center;padding:60px;color:var(--dim);font-size:11px;line-height:2">Aucun déclenchement<br><span style="font-size:9px;color:var(--border)">Les alertes apparaîtront ici</span></div>`;return;}
+  if(label)label.textContent=`${logEntries.length} DECLENCHEMENT${logEntries.length!==1?"S":""}`;
+  if(!logEntries.length){list.innerHTML=`<div style="text-align:center;padding:60px;color:var(--dim);font-size:11px;line-height:2">Aucun declenchement<br><span style="font-size:9px;color:var(--border)">Les alertes apparaitront ici</span></div>`;return;}
   list.innerHTML=logEntries.map(e=>`<div class="log-entry fade-in">
     <div class="log-top"><span class="log-pair">${e.pair}</span><span class="log-time">${fmtT(e.time)}</span></div>
     <div class="log-details">
@@ -677,9 +677,9 @@ function renderLogList(){
 function clearLog(){logEntries=[];newLogCount=0;updateLogBadge();renderLogList();document.getElementById("stat-log").textContent="0";}
 function updateLogBadge(){const b=document.getElementById("log-badge");b.style.display=newLogCount>0?"flex":"none";b.textContent=newLogCount>9?"9+":newLogCount;}
 
-// ══════════════════════════════════════════
+// ==========================================
 // STAT BAR
-// ══════════════════════════════════════════
+// ==========================================
 function updateStatBar(){
   document.getElementById("stat-pairs").textContent=activePairs.length;
   document.getElementById("stat-alerts").textContent=alerts.filter(a=>a.enabled).length;
@@ -690,14 +690,14 @@ function updateStatBar(){
   tEl.textContent=(t&&c)?"ON":"OFF";tEl.style.color=(t&&c)?"var(--green)":"var(--dim)";
 }
 
-// ══════════════════════════════════════════
+// ==========================================
 // STATUS
-// ══════════════════════════════════════════
+// ==========================================
 function setStatus(type,msg=""){
   const dot=document.getElementById("status-dot");
-  if(type==="live"){dot.textContent="● LIVE";dot.style.color="var(--green)";}
+  if(type==="live"){dot.textContent="&bull; LIVE";dot.style.color="var(--green)";}
   else if(type==="error"){dot.textContent=msg;dot.style.color="var(--red)";}
-  else{dot.textContent="◌ CONNEXION...";dot.style.color="var(--amber)";}
+  else{dot.textContent="o CONNEXION...";dot.style.color="var(--amber)";}
 }
 function flashStatus(msg){
   const dot=document.getElementById("status-dot"),prev=dot.textContent,prevC=dot.style.color;
@@ -705,78 +705,78 @@ function flashStatus(msg){
   setTimeout(()=>{dot.textContent=prev;dot.style.color=prevC;},2000);
 }
 
-// ══════════════════════════════════════════
+// ==========================================
 // DISCORD
-// ══════════════════════════════════════════
+// ==========================================
 function sendDiscord(a,pips,abs,price,open){
   const wh=loadLS("fp_webhook","");if(!wh)return;
   fetch(wh,{method:"POST",headers:{"Content-Type":"application/json"},
     body:JSON.stringify({embeds:[{
-      title:`⚡ ALERTE FOREX — ${a.pair}`,
+      title:`! ALERTE FOREX - ${a.pair}`,
       color:pips>0?0x00e87c:0xff2850,
       fields:[
-        {name:"📊 Mouvement daily",value:`**${pips>0?"+":""}${pips} pips** ${pips>0?"▲ HAUSSE":"▼ BAISSE"}`,inline:true},
-        {name:"🎯 Seuil",value:`${a.pips} pips`,inline:true},
-        {name:"📅 Open daily",value:fmt(open,a.pair),inline:true},
-        {name:"💰 Prix actuel",value:fmt(price,a.pair),inline:true},
-        {name:"🕐 Heure",value:fmtT(new Date()),inline:true}
+        {name:" Mouvement daily",value:`**${pips>0?"+":""}${pips} pips** ${pips>0?"&#9650; HAUSSE":"&#9660; BAISSE"}`,inline:true},
+        {name:" Seuil",value:`${a.pips} pips`,inline:true},
+        {name:" Open daily",value:fmt(open,a.pair),inline:true},
+        {name:" Prix actuel",value:fmt(price,a.pair),inline:true},
+        {name:" Heure",value:fmtT(new Date()),inline:true}
       ],
       footer:{text:"ForexPIP Tracker"},timestamp:new Date().toISOString()
     }]})
   }).catch(()=>{});
 }
 
-// ══════════════════════════════════════════
+// ==========================================
 // TELEGRAM
-// ══════════════════════════════════════════
+// ==========================================
 function sendTelegram(a,pips,abs,price,open){
   const token=loadLS("fp_tg_token",""),chatId=loadLS("fp_tg_chatid","");
   if(!token||!chatId)return;
-  const text=`⚡ *ALERTE FOREX — ${a.pair}*\n`+
-    `${pips>0?"+":""}${pips} pips ${pips>0?"▲ HAUSSE":"▼ BAISSE"}\n`+
-    `🎯 Seuil: ${a.pips} pips\n`+
-    `📅 Open daily: ${fmt(open,a.pair)}\n`+
-    `💰 Prix actuel: ${fmt(price,a.pair)}\n`+
-    `🕐 ${fmtT(new Date())}`;
+  const text=`! *ALERTE FOREX - ${a.pair}*\n`+
+    `${pips>0?"+":""}${pips} pips ${pips>0?"&#9650; HAUSSE":"&#9660; BAISSE"}\n`+
+    ` Seuil: ${a.pips} pips\n`+
+    ` Open daily: ${fmt(open,a.pair)}\n`+
+    ` Prix actuel: ${fmt(price,a.pair)}\n`+
+    ` ${fmtT(new Date())}`;
   fetch(`https://api.telegram.org/bot${token}/sendMessage`,{method:"POST",
     headers:{"Content-Type":"application/json"},
     body:JSON.stringify({chat_id:chatId,text,parse_mode:"Markdown"})
   }).catch(()=>{});
 }
 
-// ══════════════════════════════════════════
+// ==========================================
 // NOTIF HANDLERS
-// ══════════════════════════════════════════
+// ==========================================
 function saveWebhook(){saveLS("fp_webhook",document.getElementById("webhook-input").value.trim());updateStatBar();}
 async function testWebhook(){
-  const url=loadLS("fp_webhook","");if(!url){setNSt("discord","⚠ Colle l'URL d'abord","var(--amber)");return;}
+  const url=loadLS("fp_webhook","");if(!url){setNSt("discord","! Colle l'URL d'abord","var(--amber)");return;}
   setNSt("discord","Envoi...","var(--mid)");
   try{const r=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({embeds:[{title:"✅ ForexPIP Tracker — Test OK",description:"Webhook configuré ✓",color:0x1a85ff,footer:{text:"ForexPIP Tracker"},timestamp:new Date().toISOString()}]})});
-    setNSt("discord",r.ok||r.status===204?"✓ Webhook fonctionnel !":"⚠ HTTP "+r.status,r.ok||r.status===204?"var(--green)":"var(--red)");
-  }catch(e){setNSt("discord","⚠ "+e.message,"var(--red)");}
+    body:JSON.stringify({embeds:[{title:"OK ForexPIP Tracker - Test OK",description:"Webhook configure OK",color:0x1a85ff,footer:{text:"ForexPIP Tracker"},timestamp:new Date().toISOString()}]})});
+    setNSt("discord",r.ok||r.status===204?"OK Webhook fonctionnel !":"! HTTP "+r.status,r.ok||r.status===204?"var(--green)":"var(--red)");
+  }catch(e){setNSt("discord","! "+e.message,"var(--red)");}
 }
-function clearWebhook(){document.getElementById("webhook-input").value="";saveLS("fp_webhook","");updateStatBar();setNSt("discord","Effacé","var(--dim)");}
+function clearWebhook(){document.getElementById("webhook-input").value="";saveLS("fp_webhook","");updateStatBar();setNSt("discord","Efface","var(--dim)");}
 function saveTelegram(){saveLS("fp_tg_token",document.getElementById("tg-token").value.trim());saveLS("fp_tg_chatid",document.getElementById("tg-chatid").value.trim());updateStatBar();}
 async function testTelegram(){
   const token=loadLS("fp_tg_token",""),chatId=loadLS("fp_tg_chatid","");
-  if(!token||!chatId){setNSt("telegram","⚠ Token + Chat ID requis","var(--amber)");return;}
+  if(!token||!chatId){setNSt("telegram","! Token + Chat ID requis","var(--amber)");return;}
   setNSt("telegram","Envoi...","var(--mid)");
   try{const r=await fetch(`https://api.telegram.org/bot${token}/sendMessage`,{method:"POST",
     headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({chat_id:chatId,text:"✅ *ForexPIP Tracker — Test OK*\nBot configuré ✓",parse_mode:"Markdown"})});
-    const d=await r.json();setNSt("telegram",d.ok?"✓ Telegram fonctionnel !":"⚠ "+d.description,d.ok?"var(--green)":"var(--red)");
-  }catch(e){setNSt("telegram","⚠ "+e.message,"var(--red)");}
+    body:JSON.stringify({chat_id:chatId,text:"OK *ForexPIP Tracker - Test OK*\nBot configure OK",parse_mode:"Markdown"})});
+    const d=await r.json();setNSt("telegram",d.ok?"OK Telegram fonctionnel !":"! "+d.description,d.ok?"var(--green)":"var(--red)");
+  }catch(e){setNSt("telegram","! "+e.message,"var(--red)");}
 }
-function clearTelegram(){document.getElementById("tg-token").value="";document.getElementById("tg-chatid").value="";saveLS("fp_tg_token","");saveLS("fp_tg_chatid","");updateStatBar();setNSt("telegram","Effacé","var(--dim)");}
+function clearTelegram(){document.getElementById("tg-token").value="";document.getElementById("tg-chatid").value="";saveLS("fp_tg_token","");saveLS("fp_tg_chatid","");updateStatBar();setNSt("telegram","Efface","var(--dim)");}
 function setNSt(w,msg,color){const el=document.getElementById(`${w}-status`);if(el){el.textContent=msg;el.style.color=color;}}
 
-// ══════════════════════════════════════════
+// ==========================================
 // FINNHUB KEY
-// ══════════════════════════════════════════
+// ==========================================
 function saveFinnhubKey(){
   const key=document.getElementById("fh-key-input").value.trim();
-  if(!key){setFhSt("⚠ Clé vide","var(--amber)");return;}
+  if(!key){setFhSt("! Cle vide","var(--amber)");return;}
   saveLS("fp_fh_key",key);
   fhReconnAttempts=0;
   connectFinnhub(key);
@@ -787,18 +787,18 @@ function clearFinnhubKey(){
   document.getElementById("fh-key-input").value="";
   if(fhWs){try{fhWs._intentionalClose?fhWs._intentionalClose():fhWs.close();}catch(e){}fhWs=null;}
   fhConnected=false;fhPrice={};fhOpen={};fhReconnAttempts=0;
-  setFhSt("Déconnecté — mode fallback actif","var(--dim)");
-  document.getElementById("stat-source").textContent="open.er-api (≈1min)";
+  setFhSt("Deconnecte - mode fallback actif","var(--dim)");
+  document.getElementById("stat-source").textContent="open.er-api (~1min)";
   renderDashboard();
 }
 
-// ══════════════════════════════════════════
+// ==========================================
 // PAUSE / TIMER
-// ══════════════════════════════════════════
+// ==========================================
 function togglePause(){
   paused=!paused;
   const btn=document.getElementById("pause-btn");
-  btn.textContent=paused?"▶ REPRENDRE":"⏸ PAUSE";
+  btn.textContent=paused?"&#9654; REPRENDRE":"|| PAUSE";
   btn.style.color=paused?"var(--amber)":"var(--mid)";
   btn.style.background=paused?"rgba(245,176,0,.15)":"#111";
   if(!paused)startTimer();else{clearInterval(refreshTimer);refreshTimer=null;}
@@ -807,9 +807,9 @@ function startTimer(){clearInterval(refreshTimer);if(!paused)refreshTimer=setInt
 function manualFetch(){fetchFallback();}
 function setRefresh(s){refreshSecs=s;document.querySelectorAll(".refresh-btn").forEach(b=>b.classList.toggle("active",parseInt(b.textContent)===s));startTimer();}
 
-// ══════════════════════════════════════════
+// ==========================================
 // TABS
-// ══════════════════════════════════════════
+// ==========================================
 const TABS=["dashboard","catalogue","alertes","notifs","journal","settings"];
 function switchTab(id){
   TABS.forEach(t=>{
@@ -821,9 +821,9 @@ function switchTab(id){
   if(id==="journal"){newLogCount=0;updateLogBadge();renderLogList();}
 }
 
-// ══════════════════════════════════════════
+// ==========================================
 // INIT
-// ══════════════════════════════════════════
+// ==========================================
 (async function init(){
   const savedWh=loadLS("fp_webhook",""),savedToken=loadLS("fp_tg_token","");
   const savedChatId=loadLS("fp_tg_chatid",""),savedFhKey=loadLS("fp_fh_key","");
@@ -836,13 +836,13 @@ function switchTab(id){
   populateAlertForm();
   setStatus("loading");
 
-  // Fetch fallback en premier (open ET prix depuis même source)
+  // Fetch fallback en premier (open ET prix depuis meme source)
   await fetchFallback();
   startTimer();
   updateStatBar();
 
-  // Auto-connect Finnhub si clé sauvegardée
-  // Finnhub chargera ses propres opens via REST après connexion
+  // Auto-connect Finnhub si cle sauvegardee
+  // Finnhub chargera ses propres opens via REST apres connexion
   if(savedFhKey) connectFinnhub(savedFhKey);
 })();
 </script>
