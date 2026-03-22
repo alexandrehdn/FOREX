@@ -369,10 +369,12 @@ async function fetchFHOpen(pair, key) {
 }
 
 async function loadAllFHOpens(key) {
-  setFhSt("Chargement opens daily Finnhub...","var(--amber)");
+  setFhSt("Chargement opens daily...","var(--amber)");
   const results = await Promise.allSettled(activePairs.map(p => fetchFHOpen(p, key)));
   const ok = results.filter(r=>r.value===true).length;
-  setFhSt(`✓ ${ok}/${activePairs.length} opens daily chargés (Finnhub)`, ok>0?"var(--green)":"var(--amber)");
+  // Compléter les opens manquants avec le premier prix WebSocket reçu
+  activePairs.forEach(p => { if(!fhOpen[p] && fhPrice[p]) fhOpen[p] = fhPrice[p]; });
+  setFhSt(`✓ ${Object.keys(fhOpen).length}/${activePairs.length} opens chargés`,"var(--green)");
   renderDashboard();
   renderAlertList();
 }
@@ -418,20 +420,26 @@ function scheduleRender(){
     if(document.getElementById("tab-alertes-content").style.display!=="none")renderAlertList();
   });
 }
+
+let fhReconnAttempts=0;
+
 function connectFinnhub(key) {
   if(fhWs){try{fhWs.close();}catch(e){}fhWs=null;}
   clearTimeout(fhReconnTimer);
   if(!key) return;
   setFhSt("Connexion WebSocket...","var(--amber)");
+  let intentionalClose = false;
   const ws = new WebSocket(`wss://ws.finnhub.io?token=${key}`);
 
   ws.onopen = () => {
     fhConnected = true;
+    fhReconnAttempts = 0;
+    intentionalClose = false;
     activePairs.forEach(p => ws.send(JSON.stringify({type:"subscribe",symbol:"OANDA:"+p.replace("/","_")})));
     setFhSt("✓ WebSocket live","var(--green)");
-    document.getElementById("stat-source").textContent = "Finnhub ● LIVE";
+    document.getElementById("stat-source").textContent="Finnhub ● LIVE";
     setStatus("live");
-    // Charge les opens depuis Finnhub (même source que les prix live)
+    // Charge les opens via REST candle (même source Finnhub)
     loadAllFHOpens(key);
   };
 
@@ -441,34 +449,44 @@ function connectFinnhub(key) {
       if(m.type==="trade" && m.data) {
         m.data.forEach(t => {
           const pair = t.s.replace("OANDA:","").replace("_","/");
-          fhPrice[pair] = t.p;
-          // Si l'open Finnhub n'est pas encore chargé, on attend le REST
-          // On ne mélange PAS avec fbOpen ici
+          const price = parseFloat(t.p);
+          if(!price || isNaN(price)) return;
+          fhPrice[pair] = price;
+          // Si l'open REST n'a pas pu charger cette paire, on utilise le premier prix reçu
+          if(!fhOpen[pair]) fhOpen[pair] = price;
         });
         document.getElementById("last-update").style.display="block";
         document.getElementById("last-update").textContent="LIVE "+fmtT(new Date());
         checkMidnightReset();
         scheduleRender();
+      } else if(m.type==="ping") {
+        ws.send(JSON.stringify({type:"pong"}));
       }
     } catch(_) {}
   };
 
   ws.onerror = () => {
     fhConnected=false;
-    setFhSt("⚠ Erreur — reconnexion 10s","var(--red)");
-    scheduleReconn(key);
   };
-  ws.onclose = () => {
+
+  ws.onclose = (ev) => {
     fhConnected=false;
-    if(loadLS("fp_fh_key","")===key){
-      setFhSt("Perdu — reconnexion 10s","var(--amber)");
-      scheduleReconn(key);
+    if(intentionalClose) return;
+    const savedKey = loadLS("fp_fh_key","");
+    if(savedKey && savedKey===key) {
+      fhReconnAttempts++;
+      // Backoff exponentiel : 5s, 10s, 20s, 30s max
+      const delay = Math.min(5000 * Math.pow(2, fhReconnAttempts-1), 30000);
+      setFhSt(`Reconnexion dans ${Math.round(delay/1000)}s... (tentative ${fhReconnAttempts})`,"var(--amber)");
+      fhReconnTimer = setTimeout(()=>connectFinnhub(key), delay);
     }
   };
+
+  // Stocker la ref pour pouvoir fermer proprement
+  ws._intentionalClose = () => { intentionalClose=true; ws.close(); };
   fhWs = ws;
 }
 
-function scheduleReconn(key){clearTimeout(fhReconnTimer);fhReconnTimer=setTimeout(()=>{if(loadLS("fp_fh_key","")===key)connectFinnhub(key);},10000);}
 function setFhSt(msg,color){const el=document.getElementById("fh-status");if(el){el.textContent=msg;el.style.color=color;}}
 
 // ══════════════════════════════════════════
@@ -480,28 +498,22 @@ function checkMidnightReset() {
   if(d!==currentDayUTC) {
     currentDayUTC=d;
     firedKeys.clear();
-    // Reset opens selon la source active
+    fhOpen={};
+    fbOpen={...fbRates};
     const key = loadLS("fp_fh_key","");
-    if(fhConnected && key) {
-      fhOpen={};
-      loadAllFHOpens(key);
-    } else {
-      fbOpen={...fbRates}; // snapshot actuel comme nouvel open
-    }
+    if(fhConnected && key) loadAllFHOpens(key);
     flashStatus("↺ NEW DAY — opens reset");
   }
 }
 
 async function forceReloadOpens() {
-  const key = loadLS("fp_fh_key","");
   firedKeys.clear();
-  if(fhConnected && key) {
-    fhOpen={};
-    await loadAllFHOpens(key);
-  } else {
-    fbOpen={...fbRates};
-    renderDashboard();
-  }
+  fhOpen={};
+  fbOpen={...fbRates};
+  const key = loadLS("fp_fh_key","");
+  if(fhConnected && key) await loadAllFHOpens(key);
+  else renderDashboard();
+  flashStatus("↺ Opens rechargés");
 }
 
 // ══════════════════════════════════════════
@@ -765,14 +777,17 @@ function setNSt(w,msg,color){const el=document.getElementById(`${w}-status`);if(
 function saveFinnhubKey(){
   const key=document.getElementById("fh-key-input").value.trim();
   if(!key){setFhSt("⚠ Clé vide","var(--amber)");return;}
-  saveLS("fp_fh_key",key);connectFinnhub(key);
+  saveLS("fp_fh_key",key);
+  fhReconnAttempts=0;
+  connectFinnhub(key);
 }
 function clearFinnhubKey(){
-  clearTimeout(fhReconnTimer);saveLS("fp_fh_key","");
+  clearTimeout(fhReconnTimer);
+  saveLS("fp_fh_key","");
   document.getElementById("fh-key-input").value="";
-  if(fhWs){try{fhWs.close();}catch(e){}fhWs=null;}
-  fhConnected=false;fhPrice={};fhOpen={};
-  setFhSt("Déconnecté — mode fallback","var(--dim)");
+  if(fhWs){try{fhWs._intentionalClose?fhWs._intentionalClose():fhWs.close();}catch(e){}fhWs=null;}
+  fhConnected=false;fhPrice={};fhOpen={};fhReconnAttempts=0;
+  setFhSt("Déconnecté — mode fallback actif","var(--dim)");
   document.getElementById("stat-source").textContent="open.er-api (≈1min)";
   renderDashboard();
 }
