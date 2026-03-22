@@ -1,580 +1,1205 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+<!DOCTYPE html>
 
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ForexPIP Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg: #020c16;
+    --panel: #05111f;
+    --card: #081828;
+    --border: #0f2438;
+    --border2: #163550;
+    --bright: #c0daf5;
+    --mid: #5a8aaa;
+    --dim: #264560;
+    --green: #00e87c;
+    --red: #ff2850;
+    --amber: #f5b000;
+    --blue: #1a85ff;
+    --teal: #00c8d4;
+    --mono: 'IBM Plex Mono', monospace;
+    --sans: 'Space Grotesk', sans-serif;
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { background:var(--bg); color:var(--mid); font-family:var(--mono); min-height:100vh; }
+  ::-webkit-scrollbar { width:4px; height:4px; }
+  ::-webkit-scrollbar-track { background:var(--panel); }
+  ::-webkit-scrollbar-thumb { background:var(--border2); border-radius:2px; }
+  select { background:var(--card); border:1px solid var(--border2); color:var(--bright); font-family:var(--mono); font-size:11px; padding:5px 8px; border-radius:4px; cursor:pointer; }
+  select option { background:var(--panel); }
+  input { background:var(--card); border:1px solid var(--border2); color:var(--bright); font-family:var(--mono); font-size:11px; padding:5px 8px; border-radius:4px; outline:none; }
+  input::placeholder { color:var(--dim); }
+  input[type=number] { width:80px; }
+  button { cursor:pointer; font-family:var(--mono); border:none; border-radius:4px; font-size:10px; letter-spacing:.5px; font-weight:500; padding:5px 10px; transition:opacity .15s, background .15s; }
+  button:hover { opacity:.85; }
+
+/* HEADER */
+#header {
+background:var(–panel);
+border-bottom:1px solid var(–border);
+padding:14px 22px;
+display:flex;
+justify-content:space-between;
+align-items:center;
+flex-wrap:wrap;
+gap:12px;
+position:sticky;
+top:0;
+z-index:100;
+}
+#logo { display:flex; flex-direction:column; gap:2px; }
+#status-dot { font-size:9px; letter-spacing:4px; margin-bottom:2px; }
+#logo-text { font-size:18px; font-weight:700; color:var(–bright); letter-spacing:4px; font-family:var(–sans); }
+#logo-text span { color:var(–blue); }
+#header-right { display:flex; flex-direction:column; align-items:flex-end; gap:7px; }
+#last-update { font-size:10px; color:var(–green); }
+#header-btns { display:flex; gap:6px; flex-wrap:wrap; justify-content:flex-end; }
+
+/* TABS */
+#tabs {
+background:var(–panel);
+border-bottom:1px solid var(–border);
+display:flex;
+padding-left:10px;
+overflow-x:auto;
+}
+.tab-btn {
+background:none;
+border:none;
+border-bottom:2px solid transparent;
+color:var(–dim);
+font-family:var(–mono);
+font-size:10px;
+letter-spacing:1.5px;
+font-weight:400;
+cursor:pointer;
+padding:12px 16px;
+border-radius:0;
+position:relative;
+transition:color .2s;
+white-space:nowrap;
+}
+.tab-btn.active { color:var(–blue); border-bottom-color:var(–blue); font-weight:600; }
+.tab-btn:hover:not(.active) { color:var(–mid); }
+.tab-badge {
+position:absolute; top:6px; right:4px;
+background:var(–amber); color:#000;
+border-radius:50%; width:14px; height:14px;
+display:flex; align-items:center; justify-content:center;
+font-size:8px; font-weight:700;
+}
+
+/* MAIN */
+#main { padding:18px 22px; max-width:1400px; margin:0 auto; }
+
+/* STAT BAR */
+#stat-bar {
+background:var(–panel);
+border:1px solid var(–border);
+border-radius:6px;
+padding:9px 16px;
+display:flex;
+gap:22px;
+flex-wrap:wrap;
+margin-bottom:16px;
+font-size:10px;
+}
+.stat-item { color:var(–mid); }
+.stat-item span { color:var(–bright); }
+
+/* PAIR GRID */
+#pair-grid {
+display:grid;
+grid-template-columns:repeat(auto-fill, minmax(172px, 1fr));
+gap:10px;
+}
+.pair-card {
+background:var(–card);
+border-radius:6px;
+padding:12px 13px;
+position:relative;
+border:1px solid var(–border);
+border-left:3px solid var(–dim);
+transition:all .3s;
+}
+.pair-card .remove-btn {
+position:absolute; top:6px; right:8px;
+background:none; border:none; color:var(–dim);
+cursor:pointer; font-size:10px; padding:2px 5px;
+font-family:var(–mono);
+}
+.pair-card .remove-btn:hover { color:var(–red); }
+.pair-name { font-size:10px; font-weight:600; color:var(–mid); letter-spacing:2px; margin-bottom:5px; }
+.pair-price { font-size:12px; color:var(–dim); margin-bottom:5px; }
+.pair-pips { display:flex; align-items:baseline; gap:4px; }
+.pips-val { font-size:21px; font-weight:700; }
+.pips-label { font-size:9px; color:var(–dim); }
+.pips-arrow { font-size:12px; }
+.pips-bar-wrap { height:2px; background:var(–border); border-radius:2px; margin-top:7px; }
+.pips-bar { height:100%; border-radius:2px; transition:width .5s; }
+.alert-label { font-size:9px; color:var(–amber); letter-spacing:1px; margin-top:5px; }
+
+.add-pair-card {
+background:transparent;
+border:1px dashed var(–border2);
+border-radius:6px;
+display:flex; align-items:center; justify-content:center;
+min-height:110px;
+cursor:pointer;
+font-size:10px; color:var(–dim); letter-spacing:1px;
+transition:border-color .2s, color .2s;
+}
+.add-pair-card:hover { border-color:var(–blue); color:var(–blue); }
+
+/* CATALOGUE */
+#cat-filters { display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:14px; }
+#cat-search { width:180px; }
+.group-btn {
+font-size:9px; letter-spacing:1px;
+border:1px solid var(–border2);
+background:var(–panel);
+color:var(–mid);
+padding:4px 9px; border-radius:4px;
+}
+.group-btn.active { background:var(–blue); color:#fff; border-color:var(–blue); }
+#cat-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(138px,1fr)); gap:8px; }
+.cat-card {
+background:var(–card); border-radius:5px; padding:9px 10px;
+border:1px solid var(–border); border-left:2px solid var(–dim);
+display:flex; flex-direction:column; gap:4px; transition:border .2s;
+}
+.cat-card.in-dash { border-left-color:var(–blue); border-color:rgba(26,133,255,.3); }
+.cat-card-top { display:flex; justify-content:space-between; align-items:center; }
+.cat-pair-name { font-size:10px; font-weight:600; color:var(–bright); letter-spacing:1px; }
+.cat-dot { width:7px; height:7px; border-radius:50%; background:var(–blue); }
+.cat-price { font-size:10px; color:var(–dim); }
+.cat-pips { font-size:10px; font-weight:600; }
+.cat-btn { font-size:9px; margin-top:2px; padding:4px 0; border-radius:3px; }
+
+/* ALERTES */
+#alert-layout { display:grid; grid-template-columns:300px 1fr; gap:16px; align-items:start; }
+#alert-form-panel {
+background:var(–panel); border:1px solid var(–border);
+border-radius:6px; padding:16px;
+}
+.form-title { font-size:10px; color:var(–blue); letter-spacing:3px; margin-bottom:14px; }
+.form-row { display:flex; gap:7px; align-items:center; margin-bottom:10px; flex-wrap:wrap; }
+.info-box { background:var(–card); border-radius:4px; padding:10px; font-size:10px; color:var(–dim); line-height:1.9; margin-top:14px; }
+.info-box .info-title { color:var(–mid); margin-bottom:4px; }
+#alert-list { display:flex; flex-direction:column; gap:8px; }
+.alert-row {
+background:var(–card); border-radius:5px; padding:10px 12px;
+border:1px solid var(–border); border-left:3px solid var(–dim);
+display:flex; align-items:center; gap:8px; transition:border .3s;
+}
+.alert-row-info { flex:1; }
+.alert-pair { font-size:12px; font-weight:600; color:var(–bright); }
+.alert-meta { font-size:10px; color:var(–dim); margin-top:2px; }
+.toggle-btn { border-radius:10px; padding:3px 10px; font-size:10px; }
+.toggle-on { background:rgba(245,176,0,.2); color:var(–amber); border:1px solid rgba(245,176,0,.3); }
+.toggle-off { background:#111; color:var(–dim); border:1px solid var(–border2); }
+.remove-alert-btn { background:rgba(255,40,80,.1); color:var(–red); padding:4px 8px; }
+
+/* DISCORD CONFIG */
+#discord-panel {
+background:var(–panel); border:1px solid var(–border);
+border-radius:6px; padding:16px; margin-bottom:14px;
+}
+.discord-header { display:flex; align-items:center; gap:10px; margin-bottom:14px; }
+.discord-logo { font-size:20px; }
+.discord-title { font-size:13px; font-weight:600; color:var(–bright); font-family:var(–sans); }
+.discord-sub { font-size:10px; color:var(–dim); }
+#webhook-input { width:100%; margin-bottom:8px; font-size:11px; padding:7px 10px; }
+.discord-status { font-size:10px; margin-top:8px; }
+.step-list { font-size:10px; color:var(–dim); line-height:2; margin-top:10px; }
+.step-list b { color:var(–mid); }
+
+/* JOURNAL */
+#journal-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
+#log-list { display:flex; flex-direction:column; gap:7px; }
+.log-entry {
+background:var(–card); border-radius:5px; padding:10px 13px;
+border:1px solid rgba(245,176,0,.2); border-left:3px solid var(–amber);
+}
+.log-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; }
+.log-pair { font-size:12px; font-weight:600; color:var(–bright); }
+.log-time { font-size:10px; color:var(–dim); }
+.log-pips { font-size:13px; font-weight:700; color:var(–amber); }
+.log-details { display:flex; gap:10px; align-items:center; }
+.log-threshold { font-size:9px; color:var(–dim); }
+.log-price { font-size:10px; color:var(–mid); }
+
+/* SETTINGS */
+#settings-layout { max-width:500px; display:flex; flex-direction:column; gap:14px; }
+.settings-panel { background:var(–panel); border:1px solid var(–border); border-radius:6px; padding:16px; }
+.settings-title { font-size:10px; color:var(–blue); letter-spacing:2px; margin-bottom:12px; }
+.refresh-btns { display:flex; gap:8px; flex-wrap:wrap; }
+.refresh-btn {
+background:var(–card); color:var(–mid);
+border:1px solid var(–border2); padding:6px 14px; font-size:11px;
+}
+.refresh-btn.active { background:var(–blue); color:#fff; border-color:var(–blue); }
+.notif-row { display:flex; align-items:center; gap:10px; }
+.notif-dot { width:9px; height:9px; border-radius:50%; }
+.reset-btn { background:rgba(255,40,80,.1); color:var(–red); padding:8px 16px; font-size:11px; }
+.settings-note { font-size:9px; color:var(–dim); line-height:1.9; padding:0 2px; }
+
+/* GLOW */
+@keyframes alertGlow {
+0%, 100% { box-shadow:0 0 8px rgba(245,176,0,.3); }
+50% { box-shadow:0 0 20px rgba(245,176,0,.6); }
+}
+.alert-glow { animation:alertGlow 1.5s ease-in-out infinite; }
+
+/* LIVE TICK */
+@keyframes livePulse {
+0%, 100% { opacity:1; }
+50% { opacity:.3; }
+}
+.live-pulse { animation:livePulse 1.2s ease-in-out infinite; }
+
+/* PRICE FLASH */
+@keyframes priceFlash {
+0% { opacity:1; }
+30% { opacity:.4; }
+100% { opacity:1; }
+}
+.price-flash { animation:priceFlash .4s ease; }
+</style>
+
+</head>
+<body>
+
+<!-- HEADER -->
+
+<div id="header">
+  <div id="logo">
+    <div id="status-dot" style="color:var(--amber)">◌ CONNEXION...</div>
+    <div id="logo-text">FOREX<span>PIP</span>TRACKER</div>
+  </div>
+  <div id="header-right">
+    <div id="last-update" style="display:none"></div>
+    <div id="header-btns">
+      <button id="notif-btn" onclick="requestNotif()" style="background:rgba(245,176,0,.15);color:var(--amber);border:1px solid rgba(245,176,0,.3)" class="hidden">🔔 NOTIFS</button>
+      <button onclick="togglePause()" id="pause-btn" style="background:#111;color:var(--mid)">⏸ PAUSE</button>
+      <button onclick="resetRef()" style="background:#111;color:var(--mid)">↺ RESET RÉF</button>
+      <button onclick="manualFetch()" style="background:rgba(0,232,124,.1);color:var(--green)">⟳ REFRESH</button>
+    </div>
+  </div>
+</div>
+
+<!-- TABS -->
+
+<div id="tabs">
+  <button class="tab-btn active" onclick="switchTab('dashboard')" id="tab-dashboard">DASHBOARD</button>
+  <button class="tab-btn" onclick="switchTab('catalogue')" id="tab-catalogue">CATALOGUE</button>
+  <button class="tab-btn" onclick="switchTab('alertes')" id="tab-alertes">ALERTES</button>
+  <button class="tab-btn" onclick="switchTab('discord')" id="tab-discord">DISCORD</button>
+  <button class="tab-btn" onclick="switchTab('journal')" id="tab-journal">JOURNAL<span class="tab-badge" id="log-badge" style="display:none">0</span></button>
+  <button class="tab-btn" onclick="switchTab('settings')" id="tab-settings">CONFIG</button>
+</div>
+
+<!-- MAIN -->
+
+<div id="main">
+
+  <!-- DASHBOARD -->
+
+  <div id="tab-dashboard-content">
+    <div id="stat-bar">
+      <div class="stat-item">Paires: <span id="stat-pairs">—</span></div>
+      <div class="stat-item">Alertes ON: <span id="stat-alerts" style="color:var(--blue)">—</span></div>
+      <div class="stat-item">Déclenchements: <span id="stat-log" style="color:var(--amber)">0</span></div>
+      <div class="stat-item">Source: <span id="stat-source">—</span></div>
+      <div class="stat-item">Discord: <span id="stat-discord" style="color:var(--dim)">OFF</span></div>
+    </div>
+    <div id="pair-grid"></div>
+  </div>
+
+  <!-- CATALOGUE -->
+
+  <div id="tab-catalogue-content" style="display:none">
+    <div id="cat-filters">
+      <input type="text" id="cat-search" placeholder="Rechercher ex: GBP..." oninput="renderCatalogue()"/>
+      <button class="group-btn active" onclick="setCatGroup('TOUS',this)">TOUS</button>
+      <button class="group-btn" onclick="setCatGroup('MAJORS',this)">MAJORS</button>
+      <button class="group-btn" onclick="setCatGroup('EUR CROSSES',this)">EUR</button>
+      <button class="group-btn" onclick="setCatGroup('GBP CROSSES',this)">GBP</button>
+      <button class="group-btn" onclick="setCatGroup('JPY CROSSES',this)">JPY</button>
+      <button class="group-btn" onclick="setCatGroup('AUD/NZD',this)">AUD/NZD</button>
+      <button class="group-btn" onclick="setCatGroup('CAD/CHF',this)">CAD/CHF</button>
+      <button class="group-btn" onclick="setCatGroup('EXOTIQUES',this)">EXOTIQUES</button>
+    </div>
+    <div id="cat-grid"></div>
+  </div>
+
+  <!-- ALERTES -->
+
+  <div id="tab-alertes-content" style="display:none">
+    <div id="alert-layout">
+      <div id="alert-form-panel">
+        <div class="form-title">NOUVELLE ALERTE</div>
+        <div class="form-row">
+          <select id="al-base"></select>
+          <span style="color:var(--dim)">/</span>
+          <select id="al-quote"></select>
+        </div>
+        <div class="form-row">
+          <input type="number" id="al-pips" value="120" min="1" max="9999"/>
+          <span style="font-size:10px;color:var(--dim)">pips</span>
+          <select id="al-dir">
+            <option value="both">↕ Les deux</option>
+            <option value="up">▲ Hausse</option>
+            <option value="down">▼ Baisse</option>
+          </select>
+        </div>
+        <button onclick="createAlert()" style="background:var(--green);color:#000;width:100%;padding:9px;font-size:11px;letter-spacing:1px">
+          + CRÉER ALERTE
+        </button>
+        <div class="info-box">
+          <div class="info-title">ℹ INFOS</div>
+          <div>• Se répète par multiple de seuil</div>
+          <div>• ↺ Reset RÉF = pips remis à 0</div>
+          <div>• Notifs push + Discord disponibles</div>
+        </div>
+      </div>
+      <div id="alert-list"></div>
+    </div>
+  </div>
+
+  <!-- DISCORD -->
+
+  <div id="tab-discord-content" style="display:none">
+    <div id="discord-panel">
+      <div class="discord-header">
+        <div class="discord-logo">🎮</div>
+        <div>
+          <div class="discord-title">Discord Webhook</div>
+          <div class="discord-sub">Reçois tes alertes directement dans un channel Discord</div>
+        </div>
+      </div>
+      <label style="font-size:10px;color:var(--mid);display:block;margin-bottom:6px;letter-spacing:1px">URL WEBHOOK</label>
+      <input type="text" id="webhook-input" placeholder="https://discord.com/api/webhooks/..." oninput="saveWebhook()"/>
+      <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
+        <button onclick="testWebhook()" style="background:rgba(26,133,255,.15);color:var(--blue);border:1px solid rgba(26,133,255,.3);padding:6px 14px;font-size:11px">
+          ▶ TEST WEBHOOK
+        </button>
+        <button onclick="clearWebhook()" style="background:rgba(255,40,80,.1);color:var(--red);padding:6px 14px;font-size:11px">
+          EFFACER
+        </button>
+      </div>
+      <div id="discord-status" class="discord-status"></div>
+
+```
+  <div style="margin-top:18px;padding-top:16px;border-top:1px solid var(--border)">
+    <div style="font-size:11px;color:var(--mid);font-weight:600;margin-bottom:10px">📋 COMMENT CRÉER UN WEBHOOK</div>
+    <div class="step-list">
+      <div><b>1.</b> Ouvre Discord → ton serveur</div>
+      <div><b>2.</b> Clic droit sur un channel → <b>Modifier le channel</b></div>
+      <div><b>3.</b> Onglet <b>Intégrations</b> → <b>Webhooks</b> → <b>Nouveau webhook</b></div>
+      <div><b>4.</b> Copie l'URL et colle-la ci-dessus</div>
+      <div><b>5.</b> Clique <b>TEST WEBHOOK</b> pour vérifier</div>
+    </div>
+  </div>
+
+  <div style="margin-top:18px;padding:12px;background:var(--card);border-radius:5px;border-left:3px solid var(--amber)">
+    <div style="font-size:10px;color:var(--amber);margin-bottom:6px;letter-spacing:1px">⚡ FORMAT DES ALERTES DISCORD</div>
+    <div style="font-size:10px;color:var(--dim);line-height:1.9">
+      <div>• Paire + nombre de pips + direction</div>
+      <div>• Prix actuel au moment du déclenchement</div>
+      <div>• Timestamp de l'alerte</div>
+      <div>• Seuil configuré</div>
+    </div>
+  </div>
+</div>
+```
+
+  </div>
+
+  <!-- JOURNAL -->
+
+  <div id="tab-journal-content" style="display:none">
+    <div id="journal-header">
+      <div style="font-size:10px;color:var(--mid);letter-spacing:2px" id="log-count-label">0 DÉCLENCHEMENTS ENREGISTRÉS</div>
+      <button onclick="clearLog()" style="background:#111;color:var(--dim)" id="clear-log-btn">VIDER</button>
+    </div>
+    <div id="log-list">
+      <div style="text-align:center;padding:60px;color:var(--dim);font-size:11px;letter-spacing:1px;line-height:2">
+        Aucun déclenchement<br>
+        <span style="font-size:9px;color:var(--border2)">Les alertes apparaîtront ici en temps réel</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- SETTINGS -->
+
+  <div id="tab-settings-content" style="display:none">
+    <div id="settings-layout">
+
+```
+  <!-- TwelveData API Key -->
+  <div class="settings-panel">
+    <div class="settings-title">🔑 API TWELVEDATA (TEMPS RÉEL)</div>
+    <div style="font-size:10px;color:var(--dim);margin-bottom:10px;line-height:1.8">
+      Connexion WebSocket temps réel pour les paires surveillées.<br>
+      Clé gratuite sur <b style="color:var(--mid)">twelvedata.com</b> (inscription rapide)
+    </div>
+    <input type="text" id="td-key-input" placeholder="Colle ta clé API ici..." style="width:100%;margin-bottom:8px;padding:7px 10px"/>
+    <div style="display:flex;gap:8px">
+      <button onclick="saveTDKey()" style="background:rgba(0,232,124,.15);color:var(--green);border:1px solid rgba(0,232,124,.2);font-size:11px;padding:6px 14px">
+        SAUVEGARDER
+      </button>
+      <button onclick="clearTDKey()" style="background:rgba(255,40,80,.1);color:var(--red);font-size:11px;padding:6px 10px">
+        EFFACER
+      </button>
+    </div>
+    <div id="td-status" style="font-size:10px;margin-top:8px;color:var(--dim)"></div>
+    <div style="margin-top:10px;font-size:9px;color:var(--dim);line-height:1.9;padding:8px;background:var(--card);border-radius:4px">
+      Sans clé API : données via open.er-api.com (~1 min de délai)<br>
+      Avec clé TwelveData : WebSocket live sur les paires surveillées
+    </div>
+  </div>
+
+  <!-- Refresh -->
+  <div class="settings-panel">
+    <div class="settings-title">RAFRAÎCHISSEMENT (MODE FALLBACK)</div>
+    <div class="refresh-btns" id="refresh-btns">
+      <button class="refresh-btn" onclick="setRefresh(10)">10s</button>
+      <button class="refresh-btn active" onclick="setRefresh(30)">30s</button>
+      <button class="refresh-btn" onclick="setRefresh(60)">60s</button>
+      <button class="refresh-btn" onclick="setRefresh(120)">120s</button>
+    </div>
+  </div>
+
+  <!-- Notifs -->
+  <div class="settings-panel">
+    <div class="settings-title">NOTIFICATIONS NAVIGATEUR</div>
+    <div class="notif-row">
+      <div class="notif-dot" id="notif-dot" style="background:var(--dim)"></div>
+      <span id="notif-label" style="font-size:11px;color:var(--dim)">Désactivées</span>
+      <button onclick="requestNotif()" id="notif-enable-btn" style="background:rgba(245,176,0,.15);color:var(--amber);border:1px solid rgba(245,176,0,.3);font-size:10px;padding:4px 10px">ACTIVER</button>
+    </div>
+  </div>
+
+  <!-- Reset -->
+  <div class="settings-panel">
+    <div class="settings-title">RÉFÉRENCE SESSION</div>
+    <div style="font-size:11px;color:var(--dim);line-height:2;margin-bottom:10px">
+      Remet tous les compteurs de pips à zéro<br>depuis les prix actuels.
+    </div>
+    <button class="reset-btn" onclick="resetRef()">↺ RESET LA RÉFÉRENCE</button>
+  </div>
+
+  <div class="settings-note">
+    Source fallback: open.er-api.com · Source live: TwelveData WebSocket<br>
+    Adapté aux mouvements significatifs (50+ pips)
+  </div>
+</div>
+```
+
+  </div>
+
+</div><!-- /main -->
+
+<script>
+// ═══════════════════════════════════════════════
+//  DATA
+// ═══════════════════════════════════════════════
 const FOREX_GROUPS = {
-  "MAJORS":["EUR/USD","GBP/USD","USD/JPY","USD/CHF","AUD/USD","USD/CAD","NZD/USD"],
-  "EUR CROSSES":["EUR/GBP","EUR/JPY","EUR/CHF","EUR/AUD","EUR/CAD","EUR/NZD","EUR/SEK","EUR/NOK","EUR/DKK","EUR/PLN","EUR/TRY","EUR/SGD","EUR/ZAR","EUR/MXN"],
-  "GBP CROSSES":["GBP/JPY","GBP/CHF","GBP/AUD","GBP/CAD","GBP/NZD","GBP/SEK","GBP/NOK","GBP/PLN","GBP/ZAR","GBP/SGD","GBP/TRY"],
-  "JPY CROSSES":["AUD/JPY","CAD/JPY","CHF/JPY","NZD/JPY","SGD/JPY"],
-  "AUD/NZD":["AUD/NZD","AUD/CHF","AUD/CAD","AUD/SGD","NZD/CHF","NZD/CAD","NZD/SGD"],
-  "CAD/CHF":["CAD/CHF","CAD/SGD","CHF/SGD"],
-  "EXOTIQUES":["USD/MXN","USD/ZAR","USD/SEK","USD/NOK","USD/SGD","USD/HKD","USD/PLN","USD/TRY","EUR/HKD","GBP/HKD"]
+  "MAJORS":       ["EUR/USD","GBP/USD","USD/JPY","USD/CHF","AUD/USD","USD/CAD","NZD/USD"],
+  "EUR CROSSES":  ["EUR/GBP","EUR/JPY","EUR/CHF","EUR/AUD","EUR/CAD","EUR/NZD","EUR/SEK","EUR/NOK","EUR/DKK","EUR/PLN","EUR/HUF","EUR/CZK","EUR/TRY","EUR/SGD","EUR/ZAR","EUR/MXN"],
+  "GBP CROSSES":  ["GBP/JPY","GBP/CHF","GBP/AUD","GBP/CAD","GBP/NZD","GBP/SEK","GBP/NOK","GBP/DKK","GBP/PLN","GBP/ZAR","GBP/SGD","GBP/TRY","GBP/MXN"],
+  "JPY CROSSES":  ["AUD/JPY","CAD/JPY","CHF/JPY","NZD/JPY","SGD/JPY"],
+  "AUD/NZD":      ["AUD/NZD","AUD/CHF","AUD/CAD","AUD/SGD","AUD/HKD","NZD/CHF","NZD/CAD","NZD/SGD","NZD/HKD"],
+  "CAD/CHF":      ["CAD/CHF","CAD/SGD","CHF/SGD","CHF/HKD"],
+  "EXOTIQUES":    ["USD/MXN","USD/ZAR","USD/SEK","USD/NOK","USD/DKK","USD/SGD","USD/HKD","USD/PLN","USD/HUF","USD/CZK","USD/TRY","USD/THB","EUR/HKD","GBP/HKD"]
 };
 const ALL_PAIRS = [...new Set(Object.values(FOREX_GROUPS).flat())];
-const ALL_CURRENCIES = [...new Set(ALL_PAIRS.flatMap(p=>p.split("/")))].sort();
-const DEFAULT_PAIRS = ["EUR/USD","GBP/USD","USD/JPY","USD/CHF","AUD/USD","USD/CAD","NZD/USD"];
+const ALL_CURRENCIES = [...new Set(ALL_PAIRS.flatMap(p => p.split("/")))].sort();
+const DEFAULT_PAIRS  = ["EUR/USD","GBP/USD","USD/JPY","USD/CHF","AUD/USD","USD/CAD","NZD/USD"];
 
-const getPip = p => p.split("/")[1]==="JPY"?.01:.0001;
-const calcPips = (c,r,p)=>r?Math.round((c-r)/getPip(p)):null;
-const cross = (b,q,r)=>r[b]&&r[q]?r[q]/r[b]:null;
-const fmt = (r,p)=>r==null?"—":p.split("/")[1]==="JPY"?r.toFixed(3):r.toFixed(5);
-const fmtT = d=>d.toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit",second:"2-digit"});
-const pipCol = p=>p==null?"#2e5070":p>0?"#00e87c":p<0?"#ff2850":"#5a8aaa";
+// ═══════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════
+let rates       = {};
+let refRates    = {};
+let activePairs = [...DEFAULT_PAIRS];
+let alerts      = [
+  {id:1, pair:"EUR/USD", pips:100, dir:"both", enabled:true},
+  {id:2, pair:"GBP/USD", pips:80,  dir:"both", enabled:true},
+  {id:3, pair:"USD/JPY", pips:100, dir:"both", enabled:true},
+];
+let log         = [];
+let firedKeys   = new Set();
+let paused      = false;
+let refreshSecs = 30;
+let refreshTimer= null;
+let lastUpdate  = null;
+let catGroup    = "TOUS";
+let newLogCount = 0;
+let discordWebhook = "";
+let tdApiKey    = "";
+let tdWs        = null;
+let tdConnected = false;
+let dataSource  = "open.er-api";
 
-const C={bg:"#020c16",panel:"#05111f",card:"#081828",border:"#0f2438",b2:"#163550",
-  bright:"#c0daf5",mid:"#5a8aaa",dim:"#264560",green:"#00e87c",red:"#ff2850",
-  amber:"#f5b000",blue:"#1a85ff",mono:"'IBM Plex Mono','Fira Code',monospace"};
-
-const btn=(bg,col,extra={})=>({background:bg,color:col,border:"none",borderRadius:4,
-  cursor:"pointer",fontFamily:C.mono,fontSize:10,letterSpacing:".5px",fontWeight:500,
-  padding:"5px 10px",transition:"opacity .15s",...extra});
-
-function PipsBar({pips}){
-  const pct=Math.min(Math.abs(pips||0)/300*100,100),col=pipCol(pips);
-  return(<div style={{height:2,background:C.border,borderRadius:2,marginTop:7}}>
-    <div style={{width:`${pct}%`,height:"100%",background:col,borderRadius:2,transition:"width .5s"}}/>
-  </div>);
+// ═══════════════════════════════════════════════
+//  PIP UTILS
+// ═══════════════════════════════════════════════
+function getPipSize(pair) {
+  const [, q] = pair.split("/");
+  return q === "JPY" ? 0.01 : 0.0001;
+}
+function calcPips(curr, ref, pair) {
+  if (!ref) return null;
+  return Math.round((curr - ref) / getPipSize(pair));
+}
+function getCross(base, quote, r) {
+  if (!r[base] || !r[quote]) return null;
+  return r[quote] / r[base];
+}
+function fmtRate(r, pair) {
+  if (r == null) return "—";
+  const [, q] = pair.split("/");
+  return q === "JPY" ? r.toFixed(3) : r.toFixed(5);
+}
+function fmtTime(d) {
+  return d.toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit",second:"2-digit"});
+}
+function pipColor(pips) {
+  if (pips == null) return "var(--dim)";
+  if (pips > 0) return "var(--green)";
+  if (pips < 0) return "var(--red)";
+  return "var(--mid)";
 }
 
-function PairCard({pair,curr,pips,onRemove,fired}){
-  const col=pipCol(pips);
-  return(<div style={{background:C.card,borderRadius:6,padding:"12px 13px",position:"relative",
-    border:`1px solid ${fired?C.amber:pips&&pips!==0?col+"44":C.border}`,
-    borderLeft:`3px solid ${fired?C.amber:col}`,
-    boxShadow:fired?`0 0 16px ${C.amber}40`:"none",transition:"all .3s"}}>
-    <button onClick={onRemove} style={{position:"absolute",top:6,right:8,background:"none",
-      border:"none",color:C.dim,cursor:"pointer",fontSize:10,padding:"1px 5px",fontFamily:C.mono}}>✕</button>
-    <div style={{fontSize:10,fontWeight:600,color:C.mid,letterSpacing:"2px",marginBottom:4,fontFamily:C.mono}}>{pair}</div>
-    <div style={{fontSize:12,color:C.dim,marginBottom:4,fontFamily:C.mono}}>{fmt(curr,pair)}</div>
-    <div style={{display:"flex",alignItems:"baseline",gap:4}}>
-      <span style={{fontSize:21,fontWeight:700,color:col,fontFamily:C.mono}}>
-        {pips==null?"—":(pips>0?"+":"")+pips}
-      </span>
-      <span style={{fontSize:9,color:C.dim,fontFamily:C.mono}}>PIPS</span>
-      {pips!=null&&pips!==0&&<span style={{fontSize:12,color:col}}>{pips>0?"▲":"▼"}</span>}
-    </div>
-    <PipsBar pips={pips}/>
-    {fired&&<div style={{fontFamily:C.mono,marginTop:5,fontSize:9,color:C.amber,letterSpacing:"1px"}}>⚡ SEUIL ATTEINT</div>}
-  </div>);
+// ═══════════════════════════════════════════════
+//  FETCH (FALLBACK)
+// ═══════════════════════════════════════════════
+async function fetchRates() {
+  try {
+    const res = await fetch("https://open.er-api.com/v6/latest/USD");
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    if (data.result !== "success") throw new Error("API error");
+    const r = { ...data.rates, USD: 1 };
+    applyRates(r);
+    setStatus("live", `MÀJ ${fmtTime(new Date())}`);
+    dataSource = "open.er-api";
+    document.getElementById("stat-source").textContent = "open.er-api (≈1min)";
+  } catch(e) {
+    setStatus("error", "⚠ " + e.message);
+  }
 }
 
-function AlertRow({alert,pips,onToggle,onRemove}){
-  const abs=pips!=null?Math.abs(pips):null;
-  const reached=abs!=null&&alert.enabled&&abs>=alert.pips;
-  const ac=alert.enabled?(reached?C.amber:C.blue):C.dim;
-  return(<div style={{background:C.card,borderRadius:5,padding:"10px 12px",
-    border:`1px solid ${reached?C.amber:C.border}`,borderLeft:`3px solid ${ac}`,
-    display:"flex",alignItems:"center",gap:8,transition:"border .3s"}}>
-    <div style={{flex:1,fontFamily:C.mono}}>
-      <div style={{fontSize:12,fontWeight:600,color:C.bright}}>{alert.pair}</div>
-      <div style={{fontSize:10,color:C.dim,marginTop:2}}>
-        {alert.pips} pips · {alert.dir==="both"?"↕":alert.dir==="up"?"▲":"▼"}
-        {pips!=null&&<span style={{color:reached?C.amber:C.dim}}> · {pips>0?"+":""}{pips} now</span>}
-      </div>
-    </div>
-    <button onClick={()=>onToggle(alert.id)} style={{...btn(alert.enabled?C.amber+"33":"#111",alert.enabled?C.amber:C.dim),
-      border:`1px solid ${alert.enabled?C.amber:C.b2}`,borderRadius:10,padding:"3px 10px"}}>
-      {alert.enabled?"ON":"OFF"}
-    </button>
-    <button onClick={()=>onRemove(alert.id)} style={btn(C.red+"22",C.red)}>✕</button>
-  </div>);
+function applyRates(r) {
+  rates = r;
+  lastUpdate = new Date();
+  if (!Object.keys(refRates).length) {
+    refRates = { ...r };
+  }
+  checkAllAlerts();
+  renderDashboard();
+  renderCatalogue();
+  renderAlertList();
+  updateStatBar();
 }
 
-export default function App(){
-  const [rates,setRates]=useState({});
-  const [ref,setRef]=useState({});
-  const [pairs,setPairs]=useState(DEFAULT_PAIRS);
-  const [alerts,setAlerts]=useState([
-    {id:1,pair:"EUR/USD",pips:100,dir:"both",enabled:true},
-    {id:2,pair:"GBP/USD",pips:80,dir:"both",enabled:true},
-    {id:3,pair:"USD/JPY",pips:100,dir:"both",enabled:true},
-  ]);
-  const [log,setLog]=useState([]);
-  const [tab,setTab]=useState("dash");
-  const [catGrp,setCatGrp]=useState("TOUS");
-  const [catQ,setCatQ]=useState("");
-  const [lastUp,setLastUp]=useState(null);
-  const [loading,setLoading]=useState(true);
-  const [err,setErr]=useState(null);
-  const [secs,setSecs]=useState(30);
-  const [paused,setPaused]=useState(false);
-  const [notifOk,setNotifOk]=useState(false);
-  const [newLogs,setNewLogs]=useState(0);
-  const [alBase,setAlBase]=useState("GBP");
-  const [alQuote,setAlQuote]=useState("AUD");
-  const [alPips,setAlPips]=useState(120);
-  const [alDir,setAlDir]=useState("both");
-  const [webhook,setWebhook]=useState("");
-  const [webhookSt,setWebhookSt]=useState("");
-  const [tdKey,setTdKey]=useState("");
-  const [tdSt,setTdSt]=useState("");
+// ═══════════════════════════════════════════════
+//  TWELVEDATA WEBSOCKET
+// ═══════════════════════════════════════════════
+function buildTDSymbol(pair) {
+  const [b, q] = pair.split("/");
+  return `${b}/${q}`;
+}
 
-  const fired=useRef(new Set());
-  const refR=useRef({});
-  const alertsR=useRef(alerts);
-  const tdWs=useRef(null);
-  const tdOn=useRef(false);
-  useEffect(()=>{alertsR.current=alerts;},[alerts]);
+function connectTwelveData(key) {
+  if (tdWs) { tdWs.close(); tdWs = null; tdConnected = false; }
+  if (!key) return;
 
-  const getP=(pair,r,rf)=>{
-    const [b,q]=pair.split("/");
-    const c=cross(b,q,r),rv=cross(b,q,rf);
-    return{curr:c,ref:rv,pips:c&&rv?calcPips(c,rv,pair):null};
+  const symbols = activePairs.map(buildTDSymbol).join(",");
+  const ws = new WebSocket(`wss://ws.twelvedata.com/v1/quotes/price?apikey=${key}`);
+
+  ws.onopen = () => {
+    ws.send(JSON.stringify({ action:"subscribe", params:{ symbols } }));
+    tdConnected = true;
+    tdWs = ws;
+    dataSource = "TwelveData WebSocket";
+    document.getElementById("stat-source").textContent = "TwelveData ● LIVE";
+    document.getElementById("td-status").style.color = "var(--green)";
+    document.getElementById("td-status").textContent = "✓ Connecté en temps réel";
+    setStatus("live", `LIVE · ${fmtTime(new Date())}`);
   };
 
-  const sendDiscord=(alert,pips,abs,price)=>{
-    if(!webhook)return;
-    fetch(webhook,{method:"POST",headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({embeds:[{
-        title:`⚡ ALERTE FOREX — ${alert.pair}`,
-        color:pips>0?0x00e87c:0xff2850,
-        fields:[
-          {name:"📊 Mouvement",value:`**${pips>0?"+":""}${pips} pips** ${pips>0?"▲ HAUSSE":"▼ BAISSE"}`,inline:true},
-          {name:"🎯 Seuil",value:`${alert.pips} pips`,inline:true},
-          {name:"💰 Prix",value:fmt(price,alert.pair),inline:true},
-          {name:"🕐 Heure",value:fmtT(new Date()),inline:true},
-        ],
-        footer:{text:"ForexPIP Tracker"},timestamp:new Date().toISOString()
-      }]})
-    }).catch(()=>{});
-  };
-
-  const checkAlerts=useCallback((r)=>{
-    const rf=refR.current;
-    if(!Object.keys(rf).length)return;
-    alertsR.current.forEach(a=>{
-      if(!a.enabled)return;
-      const [b,q]=a.pair.split("/");
-      const c=cross(b,q,r),rv=cross(b,q,rf);
-      if(!c||!rv)return;
-      const pips=calcPips(c,rv,a.pair);
-      if(pips==null)return;
-      const abs=Math.abs(pips),bucket=Math.floor(abs/a.pips),key=`${a.id}-${bucket}`;
-      if(bucket>0&&!fired.current.has(key)){
-        const ok=a.dir==="both"||(a.dir==="up"&&pips>0)||(a.dir==="down"&&pips<0);
-        if(ok){
-          fired.current.add(key);
-          const entry={id:Date.now(),pair:a.pair,pips:abs,dir:pips>0?"▲":"▼",threshold:a.pips,price:c,time:new Date()};
-          setLog(p=>[entry,...p].slice(0,60));
-          setNewLogs(n=>n+1);
-          if(Notification?.permission==="granted")
-            new Notification(`⚡ ${a.pair} — ${abs} pips`,{body:`Seuil ${a.pips} pips ${pips>0?"▲":"▼"} @ ${fmt(c,a.pair)}`});
-          sendDiscord(a,pips,abs,c);
-        }
+  ws.onmessage = (evt) => {
+    try {
+      const msg = JSON.parse(evt.data);
+      if (msg.event === "price" && msg.symbol && msg.price) {
+        const pair = msg.symbol.replace(":", "/");
+        const [b, q] = pair.split("/");
+        // Update rates via cross
+        // TwelveData gives direct price for the pair
+        // We store as direct price in a separate map and override getCross
+        if (!rates._td) rates._td = {};
+        rates._td[pair] = parseFloat(msg.price);
+        // Trigger re-render
+        renderDashboard();
+        renderCatalogue();
+        checkAllAlerts();
+        setStatus("live", `LIVE · ${fmtTime(new Date())}`);
       }
-    });
-  },[webhook]);
-
-  const fetch_=useCallback(async()=>{
-    try{
-      const res=await fetch("https://open.er-api.com/v6/latest/USD");
-      const data=await res.json();
-      if(data.result!=="success")throw new Error("API error");
-      const r={...data.rates,USD:1};
-      setRates(r);setLastUp(new Date());setErr(null);setLoading(false);
-      setRef(prev=>{if(!Object.keys(prev).length){refR.current=r;return r;}return prev;});
-      checkAlerts(r);
-    }catch(e){setErr(e.message);setLoading(false);}
-  },[checkAlerts]);
-
-  useEffect(()=>{
-    fetch_();
-    if(Notification?.permission==="granted")setNotifOk(true);
-    else if(Notification?.permission!=="denied")
-      Notification?.requestPermission().then(p=>setNotifOk(p==="granted"));
-  },[fetch_]);
-
-  useEffect(()=>{
-    if(paused)return;
-    const t=setInterval(()=>{if(!tdOn.current)fetch_();},secs*1000);
-    return()=>clearInterval(t);
-  },[paused,secs,fetch_]);
-
-  useEffect(()=>{if(tab==="journal")setNewLogs(0);},[tab]);
-
-  const connectTD=(key)=>{
-    if(tdWs.current){tdWs.current.close();tdWs.current=null;tdOn.current=false;}
-    if(!key)return;
-    const symbols=pairs.map(p=>p.replace("/","/")).join(",");
-    const ws=new WebSocket(`wss://ws.twelvedata.com/v1/quotes/price?apikey=${key}`);
-    ws.onopen=()=>{
-      ws.send(JSON.stringify({action:"subscribe",params:{symbols}}));
-      tdOn.current=true;setTdSt("✓ Connecté — données live");
-    };
-    ws.onmessage=(e)=>{
-      try{const m=JSON.parse(e.data);
-        if(m.event==="price"&&m.price){
-          const pair=m.symbol?.replace(":","/");
-          if(pair){
-            setRates(prev=>({...prev,_td:{...(prev._td||{}),[pair]:parseFloat(m.price)}}));
-            setLastUp(new Date());
-          }
-        }
-      }catch(_){}
-    };
-    ws.onerror=()=>setTdSt("⚠ Erreur clé API");
-    ws.onclose=()=>{tdOn.current=false;};
-    tdWs.current=ws;
+    } catch(_){}
   };
 
-  const resetRef=()=>{
-    fired.current.clear();refR.current={...rates};
-    setRef({...rates});setLog([]);setNewLogs(0);
+  ws.onerror = () => {
+    tdConnected = false;
+    document.getElementById("td-status").style.color = "var(--red)";
+    document.getElementById("td-status").textContent = "⚠ Erreur de connexion — vérifier la clé API";
   };
 
-  const pairData=pairs.map(p=>{
-    const [b,q]=p.split("/");
-    const tdP=rates._td&&rates._td[p];
-    const refTd=ref._td&&ref._td[p];
-    const curr=tdP??cross(b,q,rates);
-    const rv=refTd??cross(b,q,ref);
-    return{pair:p,curr,pips:curr&&rv?calcPips(curr,rv,p):null};
+  ws.onclose = () => {
+    tdConnected = false;
+    if (key === tdApiKey) {
+      document.getElementById("td-status").style.color = "var(--dim)";
+      document.getElementById("td-status").textContent = "Déconnecté";
+    }
+  };
+}
+
+function getTDPrice(pair) {
+  return rates._td && rates._td[pair] ? rates._td[pair] : null;
+}
+
+function getPairPrice(pair) {
+  const td = getTDPrice(pair);
+  if (td) return td;
+  const [b, q] = pair.split("/");
+  return getCross(b, q, rates);
+}
+
+function getPairRefPrice(pair) {
+  const td = rates._tdRef && rates._tdRef[pair] ? rates._tdRef[pair] : null;
+  if (td) return td;
+  const [b, q] = pair.split("/");
+  return getCross(b, q, refRates);
+}
+
+// ═══════════════════════════════════════════════
+//  ALERTS CHECK
+// ═══════════════════════════════════════════════
+function checkAllAlerts() {
+  alerts.forEach(a => {
+    if (!a.enabled) return;
+    const curr = getPairPrice(a.pair);
+    const ref  = getPairRefPrice(a.pair);
+    if (!curr || !ref) return;
+    const pips  = calcPips(curr, ref, a.pair);
+    if (pips == null) return;
+    const abs   = Math.abs(pips);
+    const bucket = Math.floor(abs / a.pips);
+    const key   = `${a.id}-${bucket}`;
+    if (bucket > 0 && !firedKeys.has(key)) {
+      const dirOk = a.dir==="both"||(a.dir==="up"&&pips>0)||(a.dir==="down"&&pips<0);
+      if (dirOk) {
+        firedKeys.add(key);
+        fireAlert(a, pips, abs, curr);
+      }
+    }
   });
+}
 
-  const catPairs=ALL_PAIRS.filter(p=>{
-    if(catGrp!=="TOUS"&&!FOREX_GROUPS[catGrp]?.includes(p))return false;
-    if(catQ&&!p.toLowerCase().includes(catQ.toLowerCase()))return false;
+function fireAlert(a, pips, abs, curr) {
+  const entry = {
+    id: Date.now(), pair:a.pair, pips:abs,
+    dir:pips>0?"▲":"▼", threshold:a.pips,
+    price:curr, time:new Date()
+  };
+  log.unshift(entry);
+  if (log.length > 60) log.pop();
+  newLogCount++;
+  updateLogBadge();
+  renderLogList();
+
+  // Browser notif
+  if (Notification?.permission === "granted") {
+    new Notification(`⚡ ${a.pair} — ${abs} pips`, {
+      body:`Seuil ${a.pips} pips ${pips>0?"▲ hausse":"▼ baisse"} @ ${fmtRate(curr, a.pair)}`
+    });
+  }
+
+  // Discord
+  if (discordWebhook) {
+    sendDiscord(a, pips, abs, curr);
+  }
+}
+
+// ═══════════════════════════════════════════════
+//  DISCORD
+// ═══════════════════════════════════════════════
+function sendDiscord(alert, pips, abs, price) {
+  const direction = pips > 0 ? "▲ HAUSSE" : "▼ BAISSE";
+  const color = pips > 0 ? 0x00e87c : 0xff2850;
+  const now = new Date();
+
+  const body = {
+    embeds: [{
+      title: `⚡ ALERTE FOREX — ${alert.pair}`,
+      color: color,
+      fields: [
+        { name:"📊 Mouvement", value:`**${pips > 0 ? "+" : ""}${pips} pips** ${direction}`, inline:true },
+        { name:"🎯 Seuil", value:`${alert.threshold} pips`, inline:true },
+        { name:"💰 Prix actuel", value:fmtRate(price, alert.pair), inline:true },
+        { name:"🕐 Heure", value:fmtTime(now), inline:true },
+        { name:"📌 Direction config", value:alert.dir==="both"?"↕ Les deux":alert.dir==="up"?"▲ Hausse seulement":"▼ Baisse seulement", inline:true },
+      ],
+      footer: { text:"ForexPIP Tracker" },
+      timestamp: now.toISOString()
+    }]
+  };
+
+  fetch(discordWebhook, {
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify(body)
+  }).catch(e => console.warn("Discord webhook error:", e));
+}
+
+async function testWebhook() {
+  const url = document.getElementById("webhook-input").value.trim();
+  if (!url) { setDiscordStatus("⚠ Colle d'abord l'URL webhook", "var(--amber)"); return; }
+  setDiscordStatus("Envoi en cours...", "var(--mid)");
+  try {
+    const res = await fetch(url, {
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify({
+        embeds:[{
+          title:"✅ ForexPIP Tracker — Test réussi !",
+          description:"Ton webhook Discord est correctement configuré.\nTu recevras les alertes ici.",
+          color:0x1a85ff,
+          footer:{ text:"ForexPIP Tracker" },
+          timestamp:new Date().toISOString()
+        }]
+      })
+    });
+    if (res.ok || res.status === 204) {
+      setDiscordStatus("✓ Webhook fonctionnel ! Message envoyé.", "var(--green)");
+    } else {
+      setDiscordStatus(`⚠ Erreur HTTP ${res.status}`, "var(--red)");
+    }
+  } catch(e) {
+    setDiscordStatus("⚠ Erreur : " + e.message, "var(--red)");
+  }
+}
+
+function setDiscordStatus(msg, color) {
+  const el = document.getElementById("discord-status");
+  el.textContent = msg;
+  el.style.color = color;
+}
+
+function saveWebhook() {
+  discordWebhook = document.getElementById("webhook-input").value.trim();
+  const statEl = document.getElementById("stat-discord");
+  statEl.textContent = discordWebhook ? "ON" : "OFF";
+  statEl.style.color = discordWebhook ? "var(--green)" : "var(--dim)";
+}
+
+function clearWebhook() {
+  document.getElementById("webhook-input").value = "";
+  discordWebhook = "";
+  saveWebhook();
+  setDiscordStatus("Webhook effacé.", "var(--dim)");
+}
+
+// ═══════════════════════════════════════════════
+//  RENDER DASHBOARD
+// ═══════════════════════════════════════════════
+function renderDashboard() {
+  const grid = document.getElementById("pair-grid");
+  let html = "";
+  activePairs.forEach(pair => {
+    const curr = getPairPrice(pair);
+    const ref  = getPairRefPrice(pair);
+    const pips = curr && ref ? calcPips(curr, ref, pair) : null;
+    const col  = pipColor(pips);
+    const alertFired = alerts.some(a => a.enabled && a.pair===pair && pips!=null && Math.abs(pips)>=a.pips);
+    const pct  = Math.min(Math.abs(pips||0)/300*100,100);
+    const borderCol = alertFired ? "var(--amber)" : (pips != null && pips !== 0 ? col : "var(--border)");
+    html += `
+      <div class="pair-card ${alertFired?'alert-glow':''}" id="card-${pair.replace('/','_')}"
+        style="border-left-color:${alertFired?'var(--amber)':col};border-color:${borderCol}">
+        <button class="remove-btn" onclick="removePair('${pair}')">✕</button>
+        <div class="pair-name">${pair}</div>
+        <div class="pair-price">${fmtRate(curr, pair)}</div>
+        <div class="pair-pips">
+          <span class="pips-val" style="color:${col}">${pips==null?"—":(pips>0?"+":"")+pips}</span>
+          <span class="pips-label">PIPS</span>
+          ${pips!=null&&pips!==0?`<span class="pips-arrow" style="color:${col}">${pips>0?"▲":"▼"}</span>`:""}
+        </div>
+        <div class="pips-bar-wrap">
+          <div class="pips-bar" style="width:${pct}%;background:${col}"></div>
+        </div>
+        ${alertFired?'<div class="alert-label">⚡ SEUIL ATTEINT</div>':""}
+      </div>`;
+  });
+  html += `<div class="add-pair-card" onclick="switchTab('catalogue')">+ AJOUTER PAIRE</div>`;
+  grid.innerHTML = html;
+}
+
+// ═══════════════════════════════════════════════
+//  RENDER CATALOGUE
+// ═══════════════════════════════════════════════
+let currentCatGroup = "TOUS";
+function setCatGroup(g, el) {
+  currentCatGroup = g;
+  document.querySelectorAll(".group-btn").forEach(b => b.classList.remove("active"));
+  if (el) el.classList.add("active");
+  renderCatalogue();
+}
+
+function renderCatalogue() {
+  const search = document.getElementById("cat-search")?.value.toLowerCase() || "";
+  const filtered = ALL_PAIRS.filter(p => {
+    if (currentCatGroup !== "TOUS" && !FOREX_GROUPS[currentCatGroup]?.includes(p)) return false;
+    if (search && !p.toLowerCase().includes(search)) return false;
     return true;
   });
-
-  const Tb=({id,label,badge})=>(
-    <button onClick={()=>setTab(id)} style={{background:"none",color:tab===id?C.blue:C.dim,
-      border:"none",borderBottom:`2px solid ${tab===id?C.blue:"transparent"}`,
-      fontFamily:C.mono,fontSize:10,letterSpacing:"1.5px",fontWeight:tab===id?600:400,
-      cursor:"pointer",padding:"11px 14px",borderRadius:0,transition:"color .2s",
-      position:"relative",whiteSpace:"nowrap"}}>
-      {label}
-      {badge>0&&<span style={{position:"absolute",top:6,right:3,background:C.amber,color:"#000",
-        borderRadius:"50%",width:14,height:14,display:"flex",alignItems:"center",
-        justifyContent:"center",fontSize:8,fontWeight:700}}>{badge>9?"9+":badge}</span>}
-    </button>
-  );
-
-  return(
-  <div style={{fontFamily:C.mono,background:C.bg,minHeight:"100vh",color:C.dim}}>
-    <style>{`
-      @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600;700&display=swap');
-      *{box-sizing:border-box}
-      ::-webkit-scrollbar{width:4px;height:4px}
-      ::-webkit-scrollbar-track{background:${C.panel}}
-      ::-webkit-scrollbar-thumb{background:${C.border};border-radius:2px}
-      select option{background:${C.panel};color:${C.bright}}
-      input{outline:none}
-      @keyframes glow{0%,100%{box-shadow:0 0 8px rgba(245,176,0,.3)}50%{box-shadow:0 0 20px rgba(245,176,0,.6)}}
-    `}</style>
-
-    {/* HEADER */}
-    <div style={{background:C.panel,borderBottom:`1px solid ${C.border}`,padding:"12px 20px",
-      display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:10,
-      position:"sticky",top:0,zIndex:50}}>
-      <div>
-        <div style={{fontSize:9,color:loading?C.amber:err?C.red:C.green,letterSpacing:4,marginBottom:2}}>
-          {loading?"◌ CONNEXION...":err?`⚠ ${err}`:"● LIVE"}
+  const grid = document.getElementById("cat-grid");
+  if (!grid) return;
+  let html = "";
+  filtered.forEach(pair => {
+    const inDash = activePairs.includes(pair);
+    const curr = getPairPrice(pair);
+    const ref  = getPairRefPrice(pair);
+    const pips = curr && ref ? calcPips(curr, ref, pair) : null;
+    const col  = pipColor(pips);
+    html += `
+      <div class="cat-card ${inDash?'in-dash':''}">
+        <div class="cat-card-top">
+          <span class="cat-pair-name">${pair}</span>
+          ${inDash?'<div class="cat-dot"></div>':""}
         </div>
-        <div style={{fontSize:18,fontWeight:700,color:C.bright,letterSpacing:4,fontFamily:"'IBM Plex Mono',monospace"}}>
-          FOREX<span style={{color:C.blue}}>PIP</span>TRACKER
-        </div>
-      </div>
-      <div style={{display:"flex",flexDirection:"column",alignItems:"flex-end",gap:6}}>
-        {lastUp&&<div style={{fontSize:10,color:C.green}}>MÀJ {fmtT(lastUp)}</div>}
-        <div style={{display:"flex",gap:6,flexWrap:"wrap",justifyContent:"flex-end"}}>
-          {!notifOk&&<button onClick={()=>Notification?.requestPermission().then(p=>setNotifOk(p==="granted"))}
-            style={btn(C.amber+"22",C.amber,{border:`1px solid ${C.amber}44`})}>🔔 NOTIFS</button>}
-          <button onClick={()=>setPaused(p=>!p)}
-            style={btn(paused?C.amber+"22":"#111",paused?C.amber:C.mid)}>
-            {paused?"▶ REPRENDRE":"⏸ PAUSE"}
-          </button>
-          <button onClick={resetRef} style={btn("#111",C.mid)}>↺ RESET RÉF</button>
-          <button onClick={fetch_} style={btn(C.green+"22",C.green)}>⟳ REFRESH</button>
-        </div>
-      </div>
-    </div>
-
-    {/* TABS */}
-    <div style={{background:C.panel,borderBottom:`1px solid ${C.border}`,display:"flex",paddingLeft:8,overflowX:"auto"}}>
-      <Tb id="dash" label="DASHBOARD"/>
-      <Tb id="catalogue" label="CATALOGUE"/>
-      <Tb id="alertes" label="ALERTES"/>
-      <Tb id="discord" label="DISCORD"/>
-      <Tb id="journal" label="JOURNAL" badge={newLogs}/>
-      <Tb id="config" label="CONFIG"/>
-    </div>
-
-    <div style={{padding:16,maxWidth:1400,margin:"0 auto"}}>
-
-      {/* DASHBOARD */}
-      {tab==="dash"&&(
-        <div>
-          <div style={{display:"flex",gap:18,padding:"9px 14px",background:C.panel,
-            border:`1px solid ${C.border}`,borderRadius:6,marginBottom:14,flexWrap:"wrap",fontSize:10}}>
-            <span style={{color:C.mid}}>Paires: <span style={{color:C.bright}}>{pairs.length}</span></span>
-            <span style={{color:C.mid}}>Alertes ON: <span style={{color:C.blue}}>{alerts.filter(a=>a.enabled).length}</span></span>
-            <span style={{color:C.mid}}>Déclenchements: <span style={{color:C.amber}}>{log.length}</span></span>
-            <span style={{color:C.mid}}>Discord: <span style={{color:webhook?C.green:C.dim}}>{webhook?"ON":"OFF"}</span></span>
-            <span style={{color:C.mid}}>Refresh: <span style={{color:paused?C.amber:C.green}}>{paused?"PAUSE":`${secs}s`}</span></span>
-          </div>
-          {loading?(
-            <div style={{textAlign:"center",padding:60,color:C.amber,letterSpacing:3,fontSize:12}}>CHARGEMENT...</div>
-          ):(
-            <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(172px,1fr))",gap:10}}>
-              {pairData.map(({pair,curr,pips})=>(
-                <PairCard key={pair} pair={pair} curr={curr} pips={pips}
-                  fired={alerts.some(a=>a.enabled&&a.pair===pair&&pips!=null&&Math.abs(pips)>=a.pips)}
-                  onRemove={()=>setPairs(p=>p.filter(x=>x!==pair))}/>
-              ))}
-              <div onClick={()=>setTab("catalogue")} style={{background:"transparent",
-                border:`1px dashed ${C.b2}`,borderRadius:6,display:"flex",alignItems:"center",
-                justifyContent:"center",cursor:"pointer",minHeight:110,color:C.dim,fontSize:10,
-                letterSpacing:1,transition:"all .2s"}}
-                onMouseEnter={e=>{e.currentTarget.style.borderColor=C.blue;e.currentTarget.style.color=C.blue;}}
-                onMouseLeave={e=>{e.currentTarget.style.borderColor=C.b2;e.currentTarget.style.color=C.dim;}}>
-                + AJOUTER PAIRE
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* CATALOGUE */}
-      {tab==="catalogue"&&(
-        <div>
-          <div style={{marginBottom:12,display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
-            <input value={catQ} onChange={e=>setCatQ(e.target.value)} placeholder="Rechercher ex: GBP..."
-              style={{background:C.panel,border:`1px solid ${C.b2}`,color:C.bright,
-                fontFamily:C.mono,borderRadius:4,padding:"6px 10px",fontSize:11,width:185}}/>
-            {["TOUS",...Object.keys(FOREX_GROUPS)].map(g=>(
-              <button key={g} onClick={()=>setCatGrp(g)} style={{
-                background:catGrp===g?C.blue:C.panel,color:catGrp===g?"#fff":C.mid,
-                border:`1px solid ${catGrp===g?C.blue:C.b2}`,borderRadius:4,
-                cursor:"pointer",fontFamily:C.mono,fontSize:9,letterSpacing:"1px",padding:"4px 9px"}}>
-                {g}
-              </button>
-            ))}
-          </div>
-          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(138px,1fr))",gap:8}}>
-            {catPairs.map(pair=>{
-              const inD=pairs.includes(pair);
-              const [b,q]=pair.split("/");
-              const c=cross(b,q,rates),rv=cross(b,q,ref);
-              const pips=c&&rv?calcPips(c,rv,pair):null;
-              const col=pipCol(pips);
-              return(
-                <div key={pair} style={{background:C.card,borderRadius:5,padding:"9px 10px",
-                  border:`1px solid ${inD?C.blue:C.border}`,borderLeft:`2px solid ${inD?C.blue:col}`,
-                  display:"flex",flexDirection:"column",gap:4,transition:"border .2s"}}>
-                  <div style={{display:"flex",justifyContent:"space-between"}}>
-                    <span style={{fontFamily:C.mono,fontSize:10,fontWeight:600,color:C.bright,letterSpacing:1}}>{pair}</span>
-                    {inD&&<span style={{fontSize:8,color:C.blue}}>●</span>}
-                  </div>
-                  <div style={{fontFamily:C.mono,fontSize:10,color:C.dim}}>{fmt(c,pair)}</div>
-                  {pips!=null&&<div style={{fontFamily:C.mono,fontSize:10,color:col,fontWeight:600}}>{pips>0?"+":""}{pips} pips</div>}
-                  <button onClick={()=>{
-                    if(inD)setPairs(p=>p.filter(x=>x!==pair));
-                    else setPairs(p=>[...p,pair]);
-                  }} style={{...btn(inD?C.red+"22":C.green+"22",inD?C.red:C.green),marginTop:2,fontSize:9}}>
-                    {inD?"RETIRER":"+ AJOUTER"}
-                  </button>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* ALERTES */}
-      {tab==="alertes"&&(
-        <div style={{display:"grid",gridTemplateColumns:"290px 1fr",gap:14,alignItems:"start"}}>
-          <div style={{background:C.panel,border:`1px solid ${C.border}`,borderRadius:6,padding:14}}>
-            <div style={{fontSize:10,color:C.blue,letterSpacing:3,marginBottom:12}}>NOUVELLE ALERTE</div>
-            <div style={{display:"flex",gap:6,alignItems:"center",marginBottom:10,flexWrap:"wrap"}}>
-              <select value={alBase} onChange={e=>setAlBase(e.target.value)}
-                style={{background:C.card,border:`1px solid ${C.b2}`,color:C.bright,fontFamily:C.mono,borderRadius:4,padding:"5px 7px",fontSize:11}}>
-                {ALL_CURRENCIES.map(c=><option key={c}>{c}</option>)}
-              </select>
-              <span style={{color:C.dim}}>/</span>
-              <select value={alQuote} onChange={e=>setAlQuote(e.target.value)}
-                style={{background:C.card,border:`1px solid ${C.b2}`,color:C.bright,fontFamily:C.mono,borderRadius:4,padding:"5px 7px",fontSize:11}}>
-                {ALL_CURRENCIES.map(c=><option key={c}>{c}</option>)}
-              </select>
-            </div>
-            <div style={{display:"flex",gap:6,alignItems:"center",marginBottom:12,flexWrap:"wrap"}}>
-              <input type="number" value={alPips} min={1} max={9999} onChange={e=>setAlPips(Number(e.target.value))}
-                style={{background:C.card,border:`1px solid ${C.b2}`,color:C.bright,fontFamily:C.mono,borderRadius:4,padding:"5px 7px",fontSize:11,width:80}}/>
-              <span style={{fontSize:10,color:C.dim}}>pips</span>
-              <select value={alDir} onChange={e=>setAlDir(e.target.value)}
-                style={{background:C.card,border:`1px solid ${C.b2}`,color:C.bright,fontFamily:C.mono,borderRadius:4,padding:"5px 7px",fontSize:11}}>
-                <option value="both">↕ Les deux</option>
-                <option value="up">▲ Hausse</option>
-                <option value="down">▼ Baisse</option>
-              </select>
-            </div>
-            <button onClick={()=>{
-              if(alBase===alQuote||alPips<=0)return;
-              setAlerts(v=>[...v,{id:Date.now(),pair:`${alBase}/${alQuote}`,pips:alPips,dir:alDir,enabled:true}]);
-            }} style={{...btn(C.green,"#000"),width:"100%",padding:"8px",fontSize:11,letterSpacing:1}}>
-              + CRÉER ALERTE
-            </button>
-            <div style={{marginTop:12,padding:10,background:C.card,borderRadius:4,fontSize:10,color:C.dim,lineHeight:1.9}}>
-              <div style={{color:C.mid,marginBottom:3}}>ℹ INFOS</div>
-              <div>• Répète par multiple du seuil</div>
-              <div>• ↺ Reset = pips remis à 0</div>
-              <div>• Push navigateur + Discord</div>
-            </div>
-          </div>
-          <div style={{display:"flex",flexDirection:"column",gap:8}}>
-            {alerts.length===0&&<div style={{color:C.dim,textAlign:"center",padding:50,fontSize:11}}>Aucune alerte</div>}
-            {alerts.map(a=>{
-              const [b,q]=a.pair.split("/");
-              const c=cross(b,q,rates),rv=cross(b,q,ref);
-              const pips=c&&rv?calcPips(c,rv,a.pair):null;
-              return<AlertRow key={a.id} alert={a} pips={pips}
-                onToggle={id=>setAlerts(v=>v.map(x=>x.id===id?{...x,enabled:!x.enabled}:x))}
-                onRemove={id=>setAlerts(v=>v.filter(x=>x.id!==id))}/>;
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* DISCORD */}
-      {tab==="discord"&&(
-        <div style={{maxWidth:540}}>
-          <div style={{background:C.panel,border:`1px solid ${C.border}`,borderRadius:6,padding:18,marginBottom:14}}>
-            <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:14}}>
-              <span style={{fontSize:22}}>🎮</span>
-              <div>
-                <div style={{fontSize:13,fontWeight:600,color:C.bright}}>Discord Webhook</div>
-                <div style={{fontSize:10,color:C.dim}}>Reçois tes alertes dans un channel Discord</div>
-              </div>
-            </div>
-            <label style={{fontSize:10,color:C.mid,display:"block",marginBottom:6,letterSpacing:1}}>URL WEBHOOK</label>
-            <input value={webhook} onChange={e=>setWebhook(e.target.value)} placeholder="https://discord.com/api/webhooks/..."
-              style={{background:C.card,border:`1px solid ${C.b2}`,color:C.bright,fontFamily:C.mono,
-                borderRadius:4,padding:"7px 10px",fontSize:11,width:"100%",marginBottom:8}}/>
-            <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-              <button onClick={async()=>{
-                if(!webhook){setWebhookSt("⚠ Colle d'abord l'URL");return;}
-                setWebhookSt("Envoi en cours...");
-                try{
-                  const r=await fetch(webhook,{method:"POST",headers:{"Content-Type":"application/json"},
-                    body:JSON.stringify({embeds:[{title:"✅ ForexPIP Tracker — Test réussi !",
-                      description:"Webhook configuré correctement. Tu recevras les alertes ici.",
-                      color:0x1a85ff,footer:{text:"ForexPIP Tracker"},timestamp:new Date().toISOString()}]})});
-                  setWebhookSt(r.ok||r.status===204?"✓ Webhook fonctionnel !":"⚠ Erreur HTTP "+r.status);
-                }catch(e){setWebhookSt("⚠ "+e.message);}
-              }} style={btn("rgba(26,133,255,.15)",C.blue,{border:`1px solid rgba(26,133,255,.3)`,padding:"6px 14px",fontSize:11})}>
-                ▶ TEST WEBHOOK
-              </button>
-              <button onClick={()=>{setWebhook("");setWebhookSt("Webhook effacé");}}
-                style={btn(C.red+"22",C.red,{padding:"6px 14px",fontSize:11})}>EFFACER</button>
-            </div>
-            {webhookSt&&<div style={{fontSize:10,marginTop:8,color:webhookSt.includes("✓")?C.green:webhookSt.includes("⚠")?C.amber:C.mid}}>{webhookSt}</div>}
-
-            <div style={{marginTop:18,paddingTop:16,borderTop:`1px solid ${C.border}`}}>
-              <div style={{fontSize:11,color:C.mid,fontWeight:600,marginBottom:10}}>📋 CRÉER UN WEBHOOK DISCORD</div>
-              <div style={{fontSize:10,color:C.dim,lineHeight:2.2}}>
-                <div><span style={{color:C.mid}}>1.</span> Ton serveur Discord → clic droit sur un channel</div>
-                <div><span style={{color:C.mid}}>2.</span> <b style={{color:C.mid}}>Modifier le channel</b> → onglet <b style={{color:C.mid}}>Intégrations</b></div>
-                <div><span style={{color:C.mid}}>3.</span> <b style={{color:C.mid}}>Webhooks</b> → <b style={{color:C.mid}}>Nouveau webhook</b></div>
-                <div><span style={{color:C.mid}}>4.</span> <b style={{color:C.mid}}>Copier l'URL du webhook</b> → colle ci-dessus</div>
-                <div><span style={{color:C.mid}}>5.</span> Clique <b style={{color:C.mid}}>TEST WEBHOOK</b> ✓</div>
-              </div>
-            </div>
-            <div style={{marginTop:14,padding:12,background:C.card,borderRadius:5,borderLeft:`3px solid ${C.amber}`}}>
-              <div style={{fontSize:10,color:C.amber,marginBottom:5,letterSpacing:1}}>⚡ FORMAT DES ALERTES</div>
-              <div style={{fontSize:10,color:C.dim,lineHeight:1.9}}>
-                Embed coloré avec paire · pips · direction · prix · heure
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* JOURNAL */}
-      {tab==="journal"&&(
-        <div>
-          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
-            <div style={{fontSize:10,color:C.mid,letterSpacing:2}}>
-              {log.length} DÉCLENCHEMENT{log.length!==1?"S":""} ENREGISTRÉ{log.length!==1?"S":""}
-            </div>
-            {log.length>0&&<button onClick={()=>setLog([])} style={btn("#111",C.dim)}>VIDER</button>}
-          </div>
-          {log.length===0?(
-            <div style={{textAlign:"center",padding:60,color:C.dim,fontSize:11,letterSpacing:1,lineHeight:2}}>
-              Aucun déclenchement<br/>
-              <span style={{fontSize:9,color:C.border}}>Les alertes apparaîtront ici en temps réel</span>
-            </div>
-          ):(
-            <div style={{display:"flex",flexDirection:"column",gap:7}}>
-              {log.map(e=>(
-                <div key={e.id} style={{background:C.card,borderRadius:5,padding:"10px 13px",
-                  border:`1px solid rgba(245,176,0,.2)`,borderLeft:`3px solid ${C.amber}`}}>
-                  <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
-                    <span style={{fontFamily:C.mono,fontSize:12,fontWeight:600,color:C.bright}}>{e.pair}</span>
-                    <span style={{fontFamily:C.mono,fontSize:10,color:C.dim}}>{fmtT(e.time)}</span>
-                  </div>
-                  <div style={{display:"flex",gap:10,alignItems:"center",fontFamily:C.mono}}>
-                    <span style={{fontSize:13,fontWeight:700,color:C.amber}}>{e.dir} {e.pips} pips</span>
-                    <span style={{fontSize:9,color:C.dim}}>seuil {e.threshold}</span>
-                    <span style={{fontSize:10,color:C.mid}}>@ {fmt(e.price,e.pair)}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* CONFIG */}
-      {tab==="config"&&(
-        <div style={{maxWidth:490,display:"flex",flexDirection:"column",gap:14}}>
-          <div style={{background:C.panel,border:`1px solid ${C.border}`,borderRadius:6,padding:16}}>
-            <div style={{fontSize:10,color:C.blue,letterSpacing:2,marginBottom:12}}>🔑 API TWELVEDATA (TEMPS RÉEL)</div>
-            <div style={{fontSize:10,color:C.dim,marginBottom:10,lineHeight:1.8}}>
-              WebSocket live — clé gratuite sur <b style={{color:C.mid}}>twelvedata.com</b>
-            </div>
-            <input value={tdKey} onChange={e=>setTdKey(e.target.value)} placeholder="Colle ta clé API ici..."
-              style={{background:C.card,border:`1px solid ${C.b2}`,color:C.bright,fontFamily:C.mono,
-                borderRadius:4,padding:"7px 10px",fontSize:11,width:"100%",marginBottom:8}}/>
-            <div style={{display:"flex",gap:8}}>
-              <button onClick={()=>{if(tdKey){setTdSt("Connexion...");connectTD(tdKey);}}}
-                style={btn(C.green+"22",C.green,{border:`1px solid ${C.green}33`,padding:"6px 14px",fontSize:11})}>CONNECTER</button>
-              <button onClick={()=>{setTdKey("");if(tdWs.current){tdWs.current.close();tdWs.current=null;tdOn.current=false;}setTdSt("Déconnecté");}}
-                style={btn(C.red+"22",C.red,{padding:"6px 10px",fontSize:11})}>DÉCO</button>
-            </div>
-            {tdSt&&<div style={{fontSize:10,marginTop:8,color:tdSt.includes("✓")?C.green:tdSt.includes("⚠")?C.red:C.amber}}>{tdSt}</div>}
-          </div>
-          <div style={{background:C.panel,border:`1px solid ${C.border}`,borderRadius:6,padding:16}}>
-            <div style={{fontSize:10,color:C.blue,letterSpacing:2,marginBottom:12}}>RAFRAÎCHISSEMENT FALLBACK</div>
-            <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-              {[10,15,30,60,120].map(s=>(
-                <button key={s} onClick={()=>setSecs(s)} style={{
-                  background:secs===s?C.blue:C.card,color:secs===s?"#fff":C.mid,
-                  border:`1px solid ${secs===s?C.blue:C.b2}`,fontFamily:C.mono,
-                  borderRadius:4,cursor:"pointer",padding:"6px 14px",fontSize:11}}>
-                  {s}s
-                </button>
-              ))}
-            </div>
-          </div>
-          <div style={{background:C.panel,border:`1px solid ${C.border}`,borderRadius:6,padding:16}}>
-            <div style={{fontSize:10,color:C.blue,letterSpacing:2,marginBottom:10}}>NOTIFICATIONS NAVIGATEUR</div>
-            <div style={{display:"flex",alignItems:"center",gap:10}}>
-              <div style={{width:9,height:9,borderRadius:"50%",background:notifOk?C.green:C.dim}}/>
-              <span style={{fontSize:11,color:notifOk?C.green:C.dim}}>{notifOk?"Autorisées":"Désactivées"}</span>
-              {!notifOk&&<button onClick={()=>Notification?.requestPermission().then(p=>setNotifOk(p==="granted"))}
-                style={btn(C.amber+"22",C.amber,{border:`1px solid ${C.amber}44`})}>ACTIVER</button>}
-            </div>
-          </div>
-          <div style={{background:C.panel,border:`1px solid ${C.border}`,borderRadius:6,padding:16}}>
-            <div style={{fontSize:10,color:C.blue,letterSpacing:2,marginBottom:10}}>RÉFÉRENCE SESSION</div>
-            <div style={{fontSize:11,color:C.dim,lineHeight:2,marginBottom:10}}>Remet tous les compteurs à 0 depuis les prix actuels.</div>
-            <button onClick={resetRef} style={btn(C.red+"22",C.red,{padding:"8px 16px",fontSize:11})}>↺ RESET LA RÉFÉRENCE</button>
-          </div>
-          <div style={{fontSize:9,color:C.dim,lineHeight:1.9,padding:"0 2px"}}>
-            Fallback: open.er-api.com · Live: TwelveData WebSocket · Adapté aux mouvements 50+ pips
-          </div>
-        </div>
-      )}
-
-    </div>
-  </div>);
+        <div class="cat-price">${fmtRate(curr, pair)}</div>
+        ${pips!=null?`<div class="cat-pips" style="color:${col}">${pips>0?"+":""}${pips} pips</div>`:""}
+        <button class="cat-btn" onclick="togglePair('${pair}')"
+          style="background:${inDash?'rgba(255,40,80,.1)':'rgba(0,232,124,.1)'};color:${inDash?'var(--red)':'var(--green)'}">
+          ${inDash?"RETIRER":"+ AJOUTER"}
+        </button>
+      </div>`;
+  });
+  grid.innerHTML = html;
 }
+
+function togglePair(pair) {
+  if (activePairs.includes(pair)) {
+    activePairs = activePairs.filter(p => p !== pair);
+  } else {
+    activePairs.push(pair);
+    // Subscribe in TwelveData if connected
+    if (tdWs && tdConnected) {
+      tdWs.send(JSON.stringify({ action:"subscribe", params:{ symbols:buildTDSymbol(pair) } }));
+    }
+  }
+  renderDashboard();
+  renderCatalogue();
+  updateStatBar();
+}
+
+function removePair(pair) {
+  activePairs = activePairs.filter(p => p !== pair);
+  renderDashboard();
+  renderCatalogue();
+  updateStatBar();
+}
+
+// ═══════════════════════════════════════════════
+//  RENDER ALERTS
+// ═══════════════════════════════════════════════
+function populateAlertForm() {
+  const baseEl  = document.getElementById("al-base");
+  const quoteEl = document.getElementById("al-quote");
+  if (!baseEl.options.length) {
+    ALL_CURRENCIES.forEach(c => {
+      baseEl.add(new Option(c, c));
+      quoteEl.add(new Option(c, c));
+    });
+    baseEl.value  = "GBP";
+    quoteEl.value = "AUD";
+  }
+}
+
+function createAlert() {
+  const base  = document.getElementById("al-base").value;
+  const quote = document.getElementById("al-quote").value;
+  const pips  = parseInt(document.getElementById("al-pips").value);
+  const dir   = document.getElementById("al-dir").value;
+  if (base === quote || !pips || pips <= 0) return;
+  alerts.push({ id:Date.now(), pair:`${base}/${quote}`, pips, dir, enabled:true });
+  renderAlertList();
+  updateStatBar();
+}
+
+function renderAlertList() {
+  const list = document.getElementById("alert-list");
+  if (!list) return;
+  if (!alerts.length) {
+    list.innerHTML = `<div style="color:var(--dim);text-align:center;padding:50px;font-size:11px;letter-spacing:1px">Aucune alerte — créez-en une à gauche</div>`;
+    return;
+  }
+  let html = "";
+  alerts.forEach(a => {
+    const curr = getPairPrice(a.pair);
+    const ref  = getPairRefPrice(a.pair);
+    const pips = curr && ref ? calcPips(curr, ref, a.pair) : null;
+    const abs  = pips != null ? Math.abs(pips) : null;
+    const reached = abs != null && a.enabled && abs >= a.pips;
+    const acol = a.enabled ? (reached ? "var(--amber)" : "var(--blue)") : "var(--dim)";
+    const dirLabel = a.dir==="both"?"↕ les deux":a.dir==="up"?"▲ hausse":"▼ baisse";
+    html += `
+      <div class="alert-row" style="border-left-color:${acol};${reached?'border-color:rgba(245,176,0,.4)':''}">
+        <div class="alert-row-info">
+          <div class="alert-pair">${a.pair}</div>
+          <div class="alert-meta">
+            ${a.pips} pips · ${dirLabel}
+            ${pips!=null?`· <span style="color:${reached?'var(--amber)':'var(--dim)'}">${pips>0?"+":""}${pips} actuellement</span>`:""}
+          </div>
+        </div>
+        <button class="toggle-btn ${a.enabled?'toggle-on':'toggle-off'}" onclick="toggleAlert(${a.id})">
+          ${a.enabled?"ON":"OFF"}
+        </button>
+        <button class="remove-alert-btn" onclick="removeAlert(${a.id})">✕</button>
+      </div>`;
+  });
+  list.innerHTML = html;
+}
+
+function toggleAlert(id) {
+  const a = alerts.find(x => x.id === id);
+  if (a) a.enabled = !a.enabled;
+  renderAlertList();
+  updateStatBar();
+}
+function removeAlert(id) {
+  alerts = alerts.filter(x => x.id !== id);
+  renderAlertList();
+  updateStatBar();
+}
+
+// ═══════════════════════════════════════════════
+//  RENDER LOG
+// ═══════════════════════════════════════════════
+function renderLogList() {
+  const list = document.getElementById("log-list");
+  if (!list) return;
+  const label = document.getElementById("log-count-label");
+  if (label) label.textContent = `${log.length} DÉCLENCHEMENT${log.length!==1?"S":""} ENREGISTRÉ${log.length!==1?"S":""}`;
+  if (!log.length) {
+    list.innerHTML = `<div style="text-align:center;padding:60px;color:var(--dim);font-size:11px;letter-spacing:1px;line-height:2">
+      Aucun déclenchement<br><span style="font-size:9px;color:var(--border2)">Les alertes apparaîtront ici en temps réel</span></div>`;
+    return;
+  }
+  list.innerHTML = log.map(e => `
+    <div class="log-entry">
+      <div class="log-top">
+        <span class="log-pair">${e.pair}</span>
+        <span class="log-time">${fmtTime(e.time)}</span>
+      </div>
+      <div class="log-details">
+        <span class="log-pips">${e.dir} ${e.pips} pips</span>
+        <span class="log-threshold">seuil ${e.threshold}</span>
+        <span class="log-price">@ ${fmtRate(e.price, e.pair)}</span>
+      </div>
+    </div>`).join("");
+}
+
+function clearLog() {
+  log = [];
+  newLogCount = 0;
+  updateLogBadge();
+  renderLogList();
+  document.getElementById("stat-log").textContent = "0";
+}
+
+function updateLogBadge() {
+  const badge = document.getElementById("log-badge");
+  if (newLogCount > 0) {
+    badge.style.display = "flex";
+    badge.textContent = newLogCount > 9 ? "9+" : newLogCount;
+  } else {
+    badge.style.display = "none";
+  }
+}
+
+// ═══════════════════════════════════════════════
+//  STAT BAR
+// ═══════════════════════════════════════════════
+function updateStatBar() {
+  document.getElementById("stat-pairs").textContent  = activePairs.length;
+  document.getElementById("stat-alerts").textContent = alerts.filter(a=>a.enabled).length;
+  document.getElementById("stat-log").textContent    = log.length;
+}
+
+// ═══════════════════════════════════════════════
+//  RESET REF
+// ═══════════════════════════════════════════════
+function resetRef() {
+  // Snapshot current rates
+  refRates = { ...rates };
+  // Also snapshot TwelveData prices
+  if (rates._td) {
+    rates._tdRef = { ...rates._td };
+  }
+  firedKeys.clear();
+  log = [];
+  newLogCount = 0;
+  updateLogBadge();
+  renderLogList();
+  renderDashboard();
+  renderCatalogue();
+  renderAlertList();
+  updateStatBar();
+  flashStatus("↺ RÉFÉRENCE RESET");
+}
+
+// ═══════════════════════════════════════════════
+//  STATUS
+// ═══════════════════════════════════════════════
+function setStatus(type, msg) {
+  const dot  = document.getElementById("status-dot");
+  const upEl = document.getElementById("last-update");
+  if (type === "live") {
+    dot.style.color = "var(--green)";
+    dot.textContent = "● LIVE";
+    dot.classList.add("live-pulse");
+    upEl.style.display = "block";
+    upEl.textContent = msg;
+  } else if (type === "loading") {
+    dot.style.color = "var(--amber)";
+    dot.textContent = "◌ CONNEXION...";
+    dot.classList.remove("live-pulse");
+  } else if (type === "error") {
+    dot.style.color = "var(--red)";
+    dot.textContent = msg;
+    dot.classList.remove("live-pulse");
+  }
+}
+function flashStatus(msg) {
+  const dot = document.getElementById("status-dot");
+  const prev = dot.textContent;
+  dot.textContent = msg;
+  dot.style.color = "var(--amber)";
+  setTimeout(() => { dot.textContent = prev; dot.style.color = "var(--green)"; }, 1500);
+}
+
+// ═══════════════════════════════════════════════
+//  PAUSE / REFRESH
+// ═══════════════════════════════════════════════
+function togglePause() {
+  paused = !paused;
+  const btn = document.getElementById("pause-btn");
+  btn.textContent = paused ? "▶ REPRENDRE" : "⏸ PAUSE";
+  btn.style.color = paused ? "var(--amber)" : "var(--mid)";
+  btn.style.background = paused ? "rgba(245,176,0,.15)" : "#111";
+  if (!paused) startRefreshTimer();
+  else { clearInterval(refreshTimer); refreshTimer = null; }
+}
+function startRefreshTimer() {
+  clearInterval(refreshTimer);
+  if (!paused) refreshTimer = setInterval(manualFetch, refreshSecs * 1000);
+}
+function manualFetch() { if (!tdConnected) fetchRates(); }
+function setRefresh(s) {
+  refreshSecs = s;
+  document.querySelectorAll(".refresh-btn").forEach(b => {
+    b.classList.toggle("active", parseInt(b.textContent) === s);
+  });
+  startRefreshTimer();
+}
+
+// ═══════════════════════════════════════════════
+//  TWELVEDATA SETTINGS
+// ═══════════════════════════════════════════════
+function saveTDKey() {
+  const key = document.getElementById("td-key-input").value.trim();
+  if (!key) { document.getElementById("td-status").textContent = "⚠ Clé vide"; return; }
+  tdApiKey = key;
+  document.getElementById("td-status").style.color = "var(--amber)";
+  document.getElementById("td-status").textContent = "Connexion en cours...";
+  connectTwelveData(key);
+}
+function clearTDKey() {
+  tdApiKey = "";
+  if (tdWs) { tdWs.close(); tdWs = null; }
+  tdConnected = false;
+  document.getElementById("td-key-input").value = "";
+  document.getElementById("td-status").textContent = "Clé effacée — mode fallback actif";
+  document.getElementById("td-status").style.color = "var(--dim)";
+  document.getElementById("stat-source").textContent = "open.er-api (≈1min)";
+}
+
+// ═══════════════════════════════════════════════
+//  NOTIFICATIONS
+// ═══════════════════════════════════════════════
+function requestNotif() {
+  if (typeof Notification === "undefined") return;
+  Notification.requestPermission().then(p => {
+    if (p === "granted") {
+      document.getElementById("notif-dot").style.background = "var(--green)";
+      document.getElementById("notif-label").style.color = "var(--green)";
+      document.getElementById("notif-label").textContent = "Autorisées";
+      document.getElementById("notif-enable-btn").style.display = "none";
+      document.getElementById("notif-btn").style.display = "none";
+    }
+  });
+}
+
+function checkNotifState() {
+  if (typeof Notification === "undefined") return;
+  if (Notification.permission === "granted") {
+    document.getElementById("notif-dot").style.background = "var(--green)";
+    document.getElementById("notif-label").style.color = "var(--green)";
+    document.getElementById("notif-label").textContent = "Autorisées";
+    document.getElementById("notif-enable-btn").style.display = "none";
+    document.getElementById("notif-btn").style.display = "none";
+  } else if (Notification.permission !== "denied") {
+    document.getElementById("notif-btn").style.display = "inline-block";
+  }
+}
+
+// ═══════════════════════════════════════════════
+//  TABS
+// ═══════════════════════════════════════════════
+const TABS = ["dashboard","catalogue","alertes","discord","journal","settings"];
+function switchTab(id) {
+  TABS.forEach(t => {
+    document.getElementById(`tab-${t}-content`).style.display = t===id?"block":"none";
+    document.getElementById(`tab-${t}`).classList.toggle("active", t===id);
+  });
+  if (id === "catalogue") renderCatalogue();
+  if (id === "alertes")   { populateAlertForm(); renderAlertList(); }
+  if (id === "journal")   { newLogCount = 0; updateLogBadge(); renderLogList(); }
+}
+
+// ═══════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════
+(async function init() {
+  // Populate alert form selects
+  populateAlertForm();
+  checkNotifState();
+
+  // Initial fetch
+  setStatus("loading", "");
+  await fetchRates();
+  startRefreshTimer();
+  updateStatBar();
+})();
+</script>
+
+</body>
+</html>
