@@ -5,9 +5,11 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>ForexPIP Tracker</title>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<link rel="preconnect" href="https://finnhub.io"/>
+<link rel="preconnect" href="https://open.er-api.com"/>
+<link rel="dns-prefetch" href="https://ws.finnhub.io"/>
 <style>
-:root{--bg:#020c16;--panel:#05111f;--card:#081828;--border:#0f2438;--b2:#163550;--bright:#c0daf5;--mid:#5a8aaa;--dim:#264560;--green:#00e87c;--red:#ff2850;--amber:#f5b000;--blue:#1a85ff;--mono:'IBM Plex Mono',monospace}
+:root{--bg:#020c16;--panel:#05111f;--card:#081828;--border:#0f2438;--b2:#163550;--bright:#c0daf5;--mid:#5a8aaa;--dim:#264560;--green:#00e87c;--red:#ff2850;--amber:#f5b000;--blue:#1a85ff;--mono:'SF Mono','Fira Code','Consolas','Courier New',monospace}
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:var(--bg);color:var(--mid);font-family:var(--mono);min-height:100vh}
 ::-webkit-scrollbar{width:4px;height:4px}::-webkit-scrollbar-track{background:var(--panel)}::-webkit-scrollbar-thumb{background:var(--b2);border-radius:2px}
@@ -16,97 +18,85 @@ select option{background:var(--panel)}
 input{background:var(--card);border:1px solid var(--b2);color:var(--bright);font-family:var(--mono);font-size:11px;padding:5px 8px;border-radius:4px;outline:none}
 input::placeholder{color:var(--dim)}input[type=number]{width:80px}
 button{cursor:pointer;font-family:var(--mono);border:none;border-radius:4px;font-size:10px;letter-spacing:.5px;font-weight:500;padding:5px 10px;transition:opacity .15s}
-
-#header{background:var(–panel);border-bottom:1px solid var(–border);padding:12px 18px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;position:sticky;top:0;z-index:100}
-#status-dot{font-size:9px;letter-spacing:3px;margin-bottom:3px;color:var(–amber)}
-#logo-text{font-size:17px;font-weight:700;color:var(–bright);letter-spacing:4px}
-#logo-text span{color:var(–blue)}
+#header{background:var(--panel);border-bottom:1px solid var(--border);padding:12px 18px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;position:sticky;top:0;z-index:100}
+#status-dot{font-size:9px;letter-spacing:3px;margin-bottom:3px;color:var(--amber)}
+#logo-text{font-size:17px;font-weight:700;color:var(--bright);letter-spacing:4px}
+#logo-text span{color:var(--blue)}
 #header-right{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
-#last-update{font-size:10px;color:var(–green);display:none}
+#last-update{font-size:10px;color:var(--green);display:none}
 #header-btns{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
-
-#tabs{background:var(–panel);border-bottom:1px solid var(–border);display:flex;padding-left:8px;overflow-x:auto}
-.tab-btn{background:none;border:none;border-bottom:2px solid transparent;color:var(–dim);font-family:var(–mono);font-size:10px;letter-spacing:1.5px;cursor:pointer;padding:11px 14px;border-radius:0;position:relative;transition:color .2s;white-space:nowrap}
-.tab-btn.active{color:var(–blue);border-bottom-color:var(–blue);font-weight:600}
-.tab-badge{position:absolute;top:6px;right:3px;background:var(–amber);color:#000;border-radius:50%;width:14px;height:14px;display:none;align-items:center;justify-content:center;font-size:8px;font-weight:700}
-
+#tabs{background:var(--panel);border-bottom:1px solid var(--border);display:flex;padding-left:8px;overflow-x:auto}
+.tab-btn{background:none;border:none;border-bottom:2px solid transparent;color:var(--dim);font-family:var(--mono);font-size:10px;letter-spacing:1.5px;cursor:pointer;padding:11px 14px;border-radius:0;position:relative;transition:color .2s;white-space:nowrap}
+.tab-btn.active{color:var(--blue);border-bottom-color:var(--blue);font-weight:600}
+.tab-badge{position:absolute;top:6px;right:3px;background:var(--amber);color:#000;border-radius:50%;width:14px;height:14px;display:none;align-items:center;justify-content:center;font-size:8px;font-weight:700}
 #main{padding:16px 18px;max-width:1400px;margin:0 auto}
-#stat-bar{background:var(–panel);border:1px solid var(–border);border-radius:6px;padding:8px 14px;display:flex;gap:16px;flex-wrap:wrap;margin-bottom:14px;font-size:10px;align-items:center}
-.stat-item{color:var(–mid)}.stat-item span{color:var(–bright)}
-.daily-info{font-size:9px;color:var(–dim);padding:6px 10px;background:var(–card);border-radius:4px;border-left:2px solid var(–blue)}
-
+#stat-bar{background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:8px 14px;display:flex;gap:16px;flex-wrap:wrap;margin-bottom:14px;font-size:10px;align-items:center}
+.stat-item{color:var(--mid)}.stat-item span{color:var(--bright)}
+.daily-info{font-size:9px;color:var(--dim);padding:5px 10px;background:var(--card);border-radius:4px;border-left:2px solid var(--blue)}
 #pair-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(165px,1fr));gap:10px}
-.pair-card{background:var(–card);border-radius:6px;padding:12px 13px;position:relative;border:1px solid var(–border);border-left:3px solid var(–dim);transition:border-color .3s,box-shadow .3s}
-.pair-card .rm{position:absolute;top:6px;right:8px;background:none;border:none;color:var(–dim);cursor:pointer;font-size:10px;padding:1px 5px;font-family:var(–mono)}
-.pair-name{font-size:10px;font-weight:600;color:var(–mid);letter-spacing:2px;margin-bottom:3px}
-.pair-open{font-size:9px;color:var(–dim);margin-bottom:2px}
-.pair-price{font-size:12px;color:var(–bright);margin-bottom:5px;font-weight:500}
+.pair-card{background:var(--card);border-radius:6px;padding:12px 13px;position:relative;border:1px solid var(--border);border-left:3px solid var(--dim);transition:border-color .3s,box-shadow .3s}
+.pair-card .rm{position:absolute;top:6px;right:8px;background:none;border:none;color:var(--dim);cursor:pointer;font-size:10px;padding:1px 5px;font-family:var(--mono)}
+.pair-name{font-size:10px;font-weight:600;color:var(--mid);letter-spacing:2px;margin-bottom:3px}
+.pair-open{font-size:9px;color:var(--dim);margin-bottom:2px}
+.pair-price{font-size:12px;color:var(--bright);margin-bottom:5px;font-weight:500}
 .pair-pips{display:flex;align-items:baseline;gap:4px}
-.pips-val{font-size:22px;font-weight:700;transition:color .3s}
-.pips-label{font-size:9px;color:var(–dim)}
-.pips-bar-wrap{height:3px;background:var(–border);border-radius:2px;margin-top:7px}
+.pips-val{font-size:22px;font-weight:700}
+.pips-label{font-size:9px;color:var(--dim)}
+.pips-bar-wrap{height:3px;background:var(--border);border-radius:2px;margin-top:7px}
 .pips-bar{height:100%;border-radius:2px;transition:width .4s}
-.alert-label{font-size:9px;color:var(–amber);letter-spacing:1px;margin-top:5px}
-.no-data{font-size:9px;color:var(–dim);margin-top:4px;font-style:italic}
-.add-pair-card{background:transparent;border:1px dashed var(–b2);border-radius:6px;display:flex;align-items:center;justify-content:center;min-height:120px;cursor:pointer;font-size:10px;color:var(–dim);letter-spacing:1px;transition:all .2s}
-
+.alert-label{font-size:9px;color:var(--amber);letter-spacing:1px;margin-top:5px}
+.no-data{font-size:9px;color:var(--dim);margin-top:4px}
+.add-pair-card{background:transparent;border:1px dashed var(--b2);border-radius:6px;display:flex;align-items:center;justify-content:center;min-height:120px;cursor:pointer;font-size:10px;color:var(--dim);letter-spacing:1px;transition:all .2s}
 #cat-filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
-.group-btn{font-size:9px;letter-spacing:1px;border:1px solid var(–b2);background:var(–panel);color:var(–mid);padding:4px 9px;border-radius:4px;cursor:pointer;font-family:var(–mono)}
-.group-btn.active{background:var(–blue);color:#fff;border-color:var(–blue)}
+.group-btn{font-size:9px;letter-spacing:1px;border:1px solid var(--b2);background:var(--panel);color:var(--mid);padding:4px 9px;border-radius:4px;cursor:pointer;font-family:var(--mono)}
+.group-btn.active{background:var(--blue);color:#fff;border-color:var(--blue)}
 #cat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(135px,1fr));gap:8px}
-.cat-card{background:var(–card);border-radius:5px;padding:9px 10px;border:1px solid var(–border);border-left:2px solid var(–dim);display:flex;flex-direction:column;gap:4px}
-.cat-card.in-dash{border-left-color:var(–blue);border-color:rgba(26,133,255,.3)}
-.cat-pair-name{font-size:10px;font-weight:600;color:var(–bright);letter-spacing:1px}
-.cat-dot{width:7px;height:7px;border-radius:50%;background:var(–blue)}
-.cat-price{font-size:10px;color:var(–dim)}.cat-pips{font-size:10px;font-weight:600}
-.cat-btn{font-size:9px;margin-top:2px;padding:4px 0;border-radius:3px;cursor:pointer;font-family:var(–mono);border:none}
-
+.cat-card{background:var(--card);border-radius:5px;padding:9px 10px;border:1px solid var(--border);border-left:2px solid var(--dim);display:flex;flex-direction:column;gap:4px}
+.cat-card.in-dash{border-left-color:var(--blue);border-color:rgba(26,133,255,.3)}
+.cat-pair-name{font-size:10px;font-weight:600;color:var(--bright);letter-spacing:1px}
+.cat-dot{width:7px;height:7px;border-radius:50%;background:var(--blue)}
+.cat-price{font-size:10px;color:var(--dim)}.cat-pips{font-size:10px;font-weight:600}
+.cat-btn{font-size:9px;margin-top:2px;padding:4px 0;border-radius:3px;cursor:pointer;font-family:var(--mono);border:none}
 #alert-layout{display:grid;grid-template-columns:290px 1fr;gap:14px;align-items:start}
-.panel-box{background:var(–panel);border:1px solid var(–border);border-radius:6px;padding:14px}
-.panel-title{font-size:10px;color:var(–blue);letter-spacing:3px;margin-bottom:12px}
+.panel-box{background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:14px}
+.panel-title{font-size:10px;color:var(--blue);letter-spacing:3px;margin-bottom:12px}
 .form-row{display:flex;gap:7px;align-items:center;margin-bottom:10px;flex-wrap:wrap}
-.info-box{background:var(–card);border-radius:4px;padding:10px;font-size:10px;color:var(–dim);line-height:1.9;margin-top:12px}
+.info-box{background:var(--card);border-radius:4px;padding:10px;font-size:10px;color:var(--dim);line-height:1.9;margin-top:12px}
 #alert-list{display:flex;flex-direction:column;gap:8px}
-.alert-row{background:var(–card);border-radius:5px;padding:10px 12px;border:1px solid var(–border);border-left:3px solid var(–dim);display:flex;align-items:center;gap:8px;transition:border .3s}
-.alert-row-info{flex:1}.alert-pair{font-size:12px;font-weight:600;color:var(–bright)}
-.alert-meta{font-size:10px;color:var(–dim);margin-top:2px}
-.toggle-btn{border-radius:10px;padding:3px 10px;font-size:10px;cursor:pointer;font-family:var(–mono);border:1px solid}
-.toggle-on{background:rgba(245,176,0,.2);color:var(–amber);border-color:rgba(245,176,0,.3)}
-.toggle-off{background:#111;color:var(–dim);border-color:var(–b2)}
-.rm-sm{background:rgba(255,40,80,.1);color:var(–red);padding:4px 8px;border:none;cursor:pointer;font-family:var(–mono);border-radius:4px;font-size:10px}
-
+.alert-row{background:var(--card);border-radius:5px;padding:10px 12px;border:1px solid var(--border);border-left:3px solid var(--dim);display:flex;align-items:center;gap:8px;transition:border .3s}
+.alert-row-info{flex:1}.alert-pair{font-size:12px;font-weight:600;color:var(--bright)}
+.alert-meta{font-size:10px;color:var(--dim);margin-top:2px}
+.toggle-btn{border-radius:10px;padding:3px 10px;font-size:10px;cursor:pointer;font-family:var(--mono);border:1px solid}
+.toggle-on{background:rgba(245,176,0,.2);color:var(--amber);border-color:rgba(245,176,0,.3)}
+.toggle-off{background:#111;color:var(--dim);border-color:var(--b2)}
+.rm-sm{background:rgba(255,40,80,.1);color:var(--red);padding:4px 8px;border:none;cursor:pointer;font-family:var(--mono);border-radius:4px;font-size:10px}
 #notif-layout{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-.notif-card{background:var(–panel);border:1px solid var(–border);border-radius:6px;padding:16px}
+.notif-card{background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:16px}
 .notif-logo{font-size:22px;margin-bottom:8px}
-.notif-title{font-size:13px;font-weight:600;color:var(–bright);margin-bottom:4px}
-.notif-sub{font-size:10px;color:var(–dim);margin-bottom:14px;line-height:1.6}
+.notif-title{font-size:13px;font-weight:600;color:var(--bright);margin-bottom:4px}
+.notif-sub{font-size:10px;color:var(--dim);margin-bottom:14px;line-height:1.6}
 .notif-st{font-size:10px;margin-top:8px}
-.step-list{font-size:10px;color:var(–dim);line-height:2.1;margin-top:10px;padding:10px;background:var(–card);border-radius:4px}
-
+.step-list{font-size:10px;color:var(--dim);line-height:2.1;margin-top:10px;padding:10px;background:var(--card);border-radius:4px}
 #journal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
 #log-list{display:flex;flex-direction:column;gap:7px}
-.log-entry{background:var(–card);border-radius:5px;padding:10px 13px;border:1px solid rgba(245,176,0,.2);border-left:3px solid var(–amber)}
+.log-entry{background:var(--card);border-radius:5px;padding:10px 13px;border:1px solid rgba(245,176,0,.2);border-left:3px solid var(--amber)}
 .log-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
-.log-pair{font-size:12px;font-weight:600;color:var(–bright)}.log-time{font-size:10px;color:var(–dim)}
-.log-pips{font-size:13px;font-weight:700;color:var(–amber)}
+.log-pair{font-size:12px;font-weight:600;color:var(--bright)}.log-time{font-size:10px;color:var(--dim)}
+.log-pips{font-size:13px;font-weight:700;color:var(--amber)}
 .log-details{display:flex;gap:10px;align-items:center}
-.log-th{font-size:9px;color:var(–dim)}.log-price{font-size:10px;color:var(–mid)}
-
+.log-th{font-size:9px;color:var(--dim)}.log-price{font-size:10px;color:var(--mid)}
 #settings-layout{max-width:520px;display:flex;flex-direction:column;gap:14px}
-.settings-title{font-size:10px;color:var(–blue);letter-spacing:2px;margin-bottom:12px}
+.settings-title{font-size:10px;color:var(--blue);letter-spacing:2px;margin-bottom:12px}
 .refresh-btns{display:flex;gap:8px;flex-wrap:wrap}
-.refresh-btn{background:var(–card);color:var(–mid);border:1px solid var(–b2);padding:6px 14px;font-size:11px;cursor:pointer;font-family:var(–mono);border-radius:4px}
-.refresh-btn.active{background:var(–blue);color:#fff;border-color:var(–blue)}
-
+.refresh-btn{background:var(--card);color:var(--mid);border:1px solid var(--b2);padding:6px 14px;font-size:11px;cursor:pointer;font-family:var(--mono);border-radius:4px}
+.refresh-btn.active{background:var(--blue);color:#fff;border-color:var(--blue)}
+.source-badge{display:inline-block;padding:3px 8px;border-radius:3px;font-size:9px;font-weight:600;letter-spacing:1px}
 @keyframes alertGlow{0%,100%{box-shadow:0 0 8px rgba(245,176,0,.3)}50%{box-shadow:0 0 22px rgba(245,176,0,.7)}}
 .alert-glow{animation:alertGlow 1.5s ease-in-out infinite}
-@keyframes priceFlash{0%{opacity:.3}100%{opacity:1}}
-.price-flash{animation:priceFlash .3s ease}
 @keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
 .fade-in{animation:fadeIn .3s ease}
 @media(max-width:640px){#alert-layout,#notif-layout{grid-template-columns:1fr}}
 </style>
-
 </head>
 <body>
 
@@ -119,7 +109,7 @@ button{cursor:pointer;font-family:var(--mono);border:none;border-radius:4px;font
     <div id="last-update"></div>
     <div id="header-btns">
       <button onclick="togglePause()" id="pause-btn" style="background:#111;color:var(--mid)">⏸ PAUSE</button>
-      <button onclick="forceRefreshDaily()" style="background:rgba(26,133,255,.1);color:var(--blue)">↺ DAILY OPEN</button>
+      <button onclick="forceReloadOpens()" style="background:rgba(26,133,255,.1);color:var(--blue)">↺ DAILY OPEN</button>
       <button onclick="manualFetch()" style="background:rgba(0,232,124,.1);color:var(--green)">⟳ REFRESH</button>
     </div>
   </div>
@@ -136,8 +126,6 @@ button{cursor:pointer;font-family:var(--mono);border:none;border-radius:4px;font
 
 <div id="main">
 
-  <!-- DASHBOARD -->
-
   <div id="tab-dashboard-content">
     <div id="stat-bar">
       <div class="stat-item">Paires: <span id="stat-pairs">—</span></div>
@@ -146,12 +134,10 @@ button{cursor:pointer;font-family:var(--mono);border:none;border-radius:4px;font
       <div class="stat-item">Source: <span id="stat-source" style="color:var(--mid)">—</span></div>
       <div class="stat-item">Discord: <span id="stat-discord" style="color:var(--dim)">OFF</span></div>
       <div class="stat-item">Telegram: <span id="stat-telegram" style="color:var(--dim)">OFF</span></div>
-      <div class="daily-info">📅 Pips depuis l'open daily (00:00 UTC) · Reset auto à minuit</div>
+      <div class="daily-info" id="daily-info">📅 Pips depuis open daily 00:00 UTC</div>
     </div>
     <div id="pair-grid"></div>
   </div>
-
-  <!-- CATALOGUE -->
 
   <div id="tab-catalogue-content" style="display:none">
     <div id="cat-filters">
@@ -167,8 +153,6 @@ button{cursor:pointer;font-family:var(--mono);border:none;border-radius:4px;font
     <div id="cat-grid"></div>
   </div>
 
-  <!-- ALERTES -->
-
   <div id="tab-alertes-content" style="display:none">
     <div id="alert-layout">
       <div class="panel-box">
@@ -177,22 +161,24 @@ button{cursor:pointer;font-family:var(--mono);border:none;border-radius:4px;font
         <div class="form-row">
           <input type="number" id="al-pips" value="150" min="1" max="9999"/>
           <span style="font-size:10px;color:var(--dim)">pips</span>
-          <select id="al-dir"><option value="both">↕ Les deux</option><option value="up">▲ Hausse</option><option value="down">▼ Baisse</option></select>
+          <select id="al-dir">
+            <option value="both">↕ Les deux</option>
+            <option value="up">▲ Hausse</option>
+            <option value="down">▼ Baisse</option>
+          </select>
         </div>
         <button onclick="createAlert()" style="background:var(--green);color:#000;width:100%;padding:9px;font-size:11px">+ CRÉER ALERTE</button>
         <div class="info-box">
           <div style="color:var(--mid);margin-bottom:3px">ℹ INFOS</div>
           <div>• Pips depuis l'open daily 00:00 UTC</div>
+          <div>• Open et prix = même source</div>
           <div>• Reset auto chaque minuit UTC</div>
           <div>• Alertes → Discord + Telegram</div>
-          <div>• Répète par multiple du seuil</div>
         </div>
       </div>
       <div id="alert-list"></div>
     </div>
   </div>
-
-  <!-- NOTIFS -->
 
   <div id="tab-notifs-content" style="display:none">
     <div id="notif-layout">
@@ -208,9 +194,9 @@ button{cursor:pointer;font-family:var(--mono);border:none;border-radius:4px;font
         </div>
         <div id="discord-status" class="notif-st"></div>
         <div class="step-list">
-          <div><b style="color:var(--mid)">1.</b> Serveur Discord → clic droit channel</div>
+          <div><b style="color:var(--mid)">1.</b> Serveur → clic droit channel</div>
           <div><b style="color:var(--mid)">2.</b> Modifier → Intégrations → Webhooks</div>
-          <div><b style="color:var(--mid)">3.</b> Nouveau webhook → Copier l'URL</div>
+          <div><b style="color:var(--mid)">3.</b> Nouveau webhook → Copier URL</div>
           <div><b style="color:var(--mid)">4.</b> Coller ci-dessus → TEST ✓</div>
         </div>
       </div>
@@ -228,17 +214,15 @@ button{cursor:pointer;font-family:var(--mono);border:none;border-radius:4px;font
         </div>
         <div id="telegram-status" class="notif-st"></div>
         <div class="step-list">
-          <div><b style="color:var(--mid)">1.</b> Telegram → cherche <b style="color:var(--mid)">@BotFather</b></div>
-          <div><b style="color:var(--mid)">2.</b> Tape <b style="color:var(--mid)">/newbot</b> → choisis un nom</div>
+          <div><b style="color:var(--mid)">1.</b> Telegram → <b style="color:var(--mid)">@BotFather</b></div>
+          <div><b style="color:var(--mid)">2.</b> /newbot → choisis un nom</div>
           <div><b style="color:var(--mid)">3.</b> Copie le token → colle ci-dessus</div>
-          <div><b style="color:var(--mid)">4.</b> Cherche <b style="color:var(--mid)">@userinfobot</b> → /start</div>
-          <div><b style="color:var(--mid)">5.</b> Copie ton ID → Chat ID → TEST ✓</div>
+          <div><b style="color:var(--mid)">4.</b> <b style="color:var(--mid)">@userinfobot</b> → /start → copie ID</div>
+          <div><b style="color:var(--mid)">5.</b> Colle Chat ID → TEST ✓</div>
         </div>
       </div>
     </div>
   </div>
-
-  <!-- JOURNAL -->
 
   <div id="tab-journal-content" style="display:none">
     <div id="journal-header">
@@ -248,16 +232,14 @@ button{cursor:pointer;font-family:var(--mono);border:none;border-radius:4px;font
     <div id="log-list"><div style="text-align:center;padding:60px;color:var(--dim);font-size:11px;line-height:2">Aucun déclenchement<br><span style="font-size:9px;color:var(--border)">Les alertes apparaîtront ici</span></div></div>
   </div>
 
-  <!-- SETTINGS -->
-
   <div id="tab-settings-content" style="display:none">
     <div id="settings-layout">
       <div class="panel-box">
-        <div class="settings-title">🔑 FINNHUB API — TEMPS RÉEL LIVE</div>
+        <div class="settings-title">🔑 FINNHUB API — TEMPS RÉEL</div>
         <div style="font-size:10px;color:var(--dim);margin-bottom:10px;line-height:1.8">
-          WebSocket live + Daily open automatique<br>
-          Clé <b style="color:var(--mid)">100% gratuite</b> sur <b style="color:var(--mid)">finnhub.io</b><br>
-          <span style="color:var(--green)">✓ Reconnexion auto · Sauvegardé</span>
+          Prix live + open daily = <b style="color:var(--green)">même source Finnhub</b><br>
+          → Calcul pips 100% cohérent ✓<br>
+          Clé gratuite sur <b style="color:var(--mid)">finnhub.io</b>
         </div>
         <input type="text" id="fh-key-input" placeholder="Colle ta clé Finnhub ici..." style="width:100%;margin-bottom:8px"/>
         <div style="display:flex;gap:8px">
@@ -265,15 +247,13 @@ button{cursor:pointer;font-family:var(--mono);border:none;border-radius:4px;font
           <button onclick="clearFinnhubKey()" style="background:rgba(255,40,80,.1);color:var(--red);padding:6px 10px;font-size:11px">DÉCO</button>
         </div>
         <div id="fh-status" style="font-size:10px;margin-top:8px;color:var(--dim)"></div>
-        <div style="margin-top:12px;padding:10px;background:var(--card);border-radius:4px;font-size:10px;color:var(--dim);line-height:2">
-          <div><b style="color:var(--mid)">1.</b> finnhub.io → Sign up gratuit</div>
-          <div><b style="color:var(--mid)">2.</b> Dashboard → copie ta clé API</div>
-          <div><b style="color:var(--mid)">3.</b> Colle ici → CONNECTER ✓</div>
-        </div>
       </div>
       <div class="panel-box">
-        <div class="settings-title">FALLBACK SANS FINNHUB</div>
-        <div style="font-size:10px;color:var(--dim);margin-bottom:10px">Intervalle si Finnhub non connecté</div>
+        <div class="settings-title">MODE SANS FINNHUB</div>
+        <div style="font-size:10px;color:var(--dim);margin-bottom:10px;line-height:1.8">
+          Sans clé : open.er-api uniquement<br>
+          Open et prix = même source → pips cohérents
+        </div>
         <div class="refresh-btns">
           <button class="refresh-btn" onclick="setRefresh(10)">10s</button>
           <button class="refresh-btn active" onclick="setRefresh(30)">30s</button>
@@ -282,8 +262,8 @@ button{cursor:pointer;font-family:var(--mono);border:none;border-radius:4px;font
         </div>
       </div>
       <div style="font-size:9px;color:var(--dim);line-height:1.9;padding:2px 4px">
-        Pips calculés depuis l'open daily 00:00 UTC · Reset automatique à minuit<br>
-        Toutes tes configs sont sauvegardées dans le navigateur
+        ✓ Open daily et prix live = toujours la même source<br>
+        ✓ Reset automatique à minuit UTC · Configs sauvegardées
       </div>
     </div>
   </div>
@@ -291,9 +271,9 @@ button{cursor:pointer;font-family:var(--mono);border:none;border-radius:4px;font
 </div>
 
 <script>
-// ════════════════════════════════════════
+// ══════════════════════════════════════════
 // PAIRES
-// ════════════════════════════════════════
+// ══════════════════════════════════════════
 const FOREX_GROUPS={
   "MAJORS":["EUR/USD","GBP/USD","USD/JPY","USD/CHF","AUD/USD","USD/CAD","NZD/USD"],
   "EUR CROSSES":["EUR/GBP","EUR/JPY","EUR/CHF","EUR/AUD","EUR/CAD","EUR/NZD","EUR/SEK","EUR/NOK","EUR/DKK","EUR/PLN","EUR/HUF","EUR/CZK","EUR/TRY","EUR/SGD","EUR/ZAR","EUR/MXN"],
@@ -306,18 +286,23 @@ const ALL_PAIRS=[...new Set(Object.values(FOREX_GROUPS).flat())];
 const ALL_CURRENCIES=[...new Set(ALL_PAIRS.flatMap(p=>p.split("/")))].sort();
 const DEFAULT_PAIRS=["EUR/USD","GBP/USD","USD/JPY","USD/CHF","AUD/USD","USD/CAD","NZD/USD"];
 
-// ════════════════════════════════════════
+// ══════════════════════════════════════════
 // LOCALSTORAGE
-// ════════════════════════════════════════
+// ══════════════════════════════════════════
 function loadLS(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d;}catch(e){return d;}}
 function saveLS(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
 
-// ════════════════════════════════════════
+// ══════════════════════════════════════════
 // STATE
-// ════════════════════════════════════════
-let livePrice  = {};   // pair → current live price
-let dailyOpen  = {};   // pair → open price at 00:00 UTC today
-let fallbackRates = {};// USD-based rates from open.er-api
+// ══════════════════════════════════════════
+// RÈGLE FONDAMENTALE : open et current doivent toujours venir de la même source
+// Mode A : Finnhub connecté  → fhPrice[pair] + fhOpen[pair]
+// Mode B : Fallback uniquement → fbPrice[pair] + fbOpen[pair]
+
+let fhPrice  = {};  // Finnhub live prices (WebSocket)
+let fhOpen   = {};  // Finnhub daily open (REST candle)
+let fbRates  = {};  // Fallback rates USD-based
+let fbOpen   = {};  // Fallback daily open (snapshot at 00:00 UTC)
 
 let activePairs = loadLS("fp_pairs", DEFAULT_PAIRS);
 let alerts      = loadLS("fp_alerts",[
@@ -328,194 +313,89 @@ let alerts      = loadLS("fp_alerts",[
 let logEntries=[],firedKeys=new Set();
 let paused=false,refreshSecs=30,refreshTimer=null,newLogCount=0;
 let currentCatGroup="TOUS";
-let fhWs=null,fhConnected=false,fhReconnectTimer=null;
-let currentDayUTC=-1; // track day for auto-reset
+let fhWs=null,fhConnected=false,fhReconnTimer=null;
+let currentDayUTC=-1;
 
-// ════════════════════════════════════════
+// ══════════════════════════════════════════
 // PIP UTILS
-// ════════════════════════════════════════
+// ══════════════════════════════════════════
 const getPip  = p => p.split("/")[1]==="JPY" ? 0.01 : 0.0001;
-const calcPips= (c,r,p)=> r && c ? Math.round((c-r)/getPip(p)) : null;
-const fmt     = (r,p)=> r==null?"—":p.split("/")[1]==="JPY"?r.toFixed(3):r.toFixed(5);
-const fmtT    = d=> d.toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit",second:"2-digit"});
-const pipCol  = p=> p==null?"var(--dim)":p>0?"var(--green)":p<0?"var(--red)":"var(--mid)";
+const calcPips= (c,o,p) => (c&&o) ? Math.round((c-o)/getPip(p)) : null;
+const fmt     = (r,p) => r==null?"—":p.split("/")[1]==="JPY"?r.toFixed(3):r.toFixed(5);
+const fmtT    = d => d.toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit",second:"2-digit"});
+const pipCol  = p => p==null?"var(--dim)":p>0?"var(--green)":p<0?"var(--red)":"var(--mid)";
 
-// Prix actuel d'une paire (live ou fallback cross)
+// ══════════════════════════════════════════
+// PRIX ET OPEN — toujours cohérents
+// ══════════════════════════════════════════
 function getCurrent(pair) {
-  if(livePrice[pair]) return livePrice[pair];
+  if(fhConnected && fhPrice[pair]) return fhPrice[pair];
+  // Fallback cross via USD
   const [b,q] = pair.split("/");
-  if(fallbackRates[b] && fallbackRates[q]) return fallbackRates[q]/fallbackRates[b];
+  if(fbRates[b] && fbRates[q]) return fbRates[q]/fbRates[b];
   return null;
 }
 
-// Open daily d'une paire
 function getOpen(pair) {
-  return dailyOpen[pair] || null;
+  // IMPORTANT : retourne l'open de la MÊME source que getCurrent
+  if(fhConnected) {
+    return fhOpen[pair] || null; // uniquement Finnhub si connecté
+  } else {
+    // Fallback : open cross via USD (même source que getCurrent)
+    const [b,q] = pair.split("/");
+    if(fbOpen[b] && fbOpen[q]) return fbOpen[q]/fbOpen[b];
+    return null;
+  }
 }
 
-// ════════════════════════════════════════
-// DAILY OPEN — Finnhub candles REST
-// ════════════════════════════════════════
-async function fetchDailyOpen(pair, key) {
+// ══════════════════════════════════════════
+// FINNHUB — Daily open via REST candle
+// ══════════════════════════════════════════
+async function fetchFHOpen(pair, key) {
   try {
-    const sym = "OANDA:" + pair.replace("/","_");
-    const now = Math.floor(Date.now()/1000);
-    // midnight UTC today
-    const d = new Date(); d.setUTCHours(0,0,0,0);
-    const from = Math.floor(d.getTime()/1000) - 3600; // -1h buffer
-    const url = `https://finnhub.io/api/v1/forex/candle?symbol=${sym}&resolution=D&from=${from}&to=${now}&token=${key}`;
+    const sym  = "OANDA:" + pair.replace("/","_");
+    const now  = Math.floor(Date.now()/1000);
+    const d    = new Date(); d.setUTCHours(0,0,0,0);
+    const from = Math.floor(d.getTime()/1000) - 7200;
+    const url  = `https://finnhub.io/api/v1/forex/candle?symbol=${sym}&resolution=D&from=${from}&to=${now}&token=${key}`;
     const res  = await fetch(url);
     const data = await res.json();
     if(data.s==="ok" && data.o && data.o.length>0) {
-      dailyOpen[pair] = data.o[data.o.length-1]; // open of latest daily candle
+      fhOpen[pair] = data.o[data.o.length-1];
       return true;
     }
   } catch(e) {}
   return false;
 }
 
-async function fetchAllDailyOpens(key) {
-  setFhSt("Chargement opens daily...","var(--amber)");
-  const promises = activePairs.map(p => fetchDailyOpen(p, key));
-  await Promise.allSettled(promises);
-  setFhSt(`✓ ${Object.keys(dailyOpen).length}/${activePairs.length} opens daily chargés`,"var(--green)");
+async function loadAllFHOpens(key) {
+  setFhSt("Chargement opens daily Finnhub...","var(--amber)");
+  const results = await Promise.allSettled(activePairs.map(p => fetchFHOpen(p, key)));
+  const ok = results.filter(r=>r.value===true).length;
+  setFhSt(`✓ ${ok}/${activePairs.length} opens daily chargés (Finnhub)`, ok>0?"var(--green)":"var(--amber)");
   renderDashboard();
+  renderAlertList();
 }
 
-// Daily open via fallback (open.er-api ne donne pas l'historique, on utilise le premier fetch comme référence)
-function setFallbackDailyOpen() {
-  activePairs.forEach(pair => {
-    if(!dailyOpen[pair]) {
-      const c = getCurrent(pair);
-      if(c) dailyOpen[pair] = c; // approximation si pas de Finnhub
-    }
-  });
-}
-
-// Reset auto à minuit UTC
-function checkMidnightReset() {
-  const nowDayUTC = new Date().getUTCDate();
-  if(currentDayUTC === -1) { currentDayUTC = nowDayUTC; return; }
-  if(nowDayUTC !== currentDayUTC) {
-    currentDayUTC = nowDayUTC;
-    dailyOpen = {};
-    firedKeys.clear();
-    const key = loadLS("fp_fh_key","");
-    if(key && fhConnected) fetchAllDailyOpens(key);
-    else setFallbackDailyOpen();
-    flashStatus("↺ DAILY RESET MINUIT UTC");
-  }
-}
-
-// Force refresh daily open
-async function forceRefreshDaily() {
-  const key = loadLS("fp_fh_key","");
-  if(key) {
-    dailyOpen={};firedKeys.clear();
-    await fetchAllDailyOpens(key);
-  } else {
-    dailyOpen={};firedKeys.clear();
-    setFallbackDailyOpen();
-    renderDashboard();
-  }
-}
-
-// ════════════════════════════════════════
-// FINNHUB WEBSOCKET
-// ════════════════════════════════════════
-function connectFinnhub(key) {
-  if(fhWs){try{fhWs.close();}catch(e){}fhWs=null;}
-  clearTimeout(fhReconnectTimer);
-  if(!key) return;
-
-  setFhSt("Connexion WebSocket...","var(--amber)");
-  const ws = new WebSocket(`wss://ws.finnhub.io?token=${key}`);
-
-  ws.onopen = () => {
-    fhConnected = true;
-    // Subscribe to all active pairs
-    activePairs.forEach(p => {
-      ws.send(JSON.stringify({type:"subscribe", symbol:"OANDA:"+p.replace("/","_")}));
-    });
-    setFhSt("✓ WebSocket connecté — live","var(--green)");
-    document.getElementById("stat-source").textContent = "Finnhub ● LIVE";
-    setStatus("live");
-    // Load daily opens via REST
-    fetchAllDailyOpens(key);
-  };
-
-  ws.onmessage = e => {
-    try {
-      const m = JSON.parse(e.data);
-      if(m.type==="trade" && m.data) {
-        let updated = false;
-        m.data.forEach(t => {
-          const pair = t.s.replace("OANDA:","").replace("_","/");
-          if(ALL_PAIRS.includes(pair) || activePairs.includes(pair)) {
-            livePrice[pair] = t.p;
-            // Set daily open if not set yet
-            if(!dailyOpen[pair]) dailyOpen[pair] = t.p;
-            updated = true;
-          }
-        });
-        if(updated) {
-          const now = new Date();
-          document.getElementById("last-update").style.display="block";
-          document.getElementById("last-update").textContent = "LIVE "+fmtT(now);
-          checkMidnightReset();
-          checkAlerts();
-          renderDashboard();
-          if(document.getElementById("tab-catalogue-content").style.display!=="none") renderCatalogue();
-          if(document.getElementById("tab-alertes-content").style.display!=="none") renderAlertList();
-        }
-      }
-    } catch(_) {}
-  };
-
-  ws.onerror = () => {
-    fhConnected=false;
-    setFhSt("⚠ Erreur WebSocket — reconnexion dans 10s","var(--red)");
-    scheduleReconnect(key);
-  };
-
-  ws.onclose = () => {
-    fhConnected=false;
-    if(loadLS("fp_fh_key","")===key) {
-      setFhSt("Connexion perdue — reconnexion dans 10s","var(--amber)");
-      scheduleReconnect(key);
-    }
-  };
-
-  fhWs = ws;
-}
-
-function scheduleReconnect(key) {
-  clearTimeout(fhReconnectTimer);
-  fhReconnectTimer = setTimeout(() => {
-    if(loadLS("fp_fh_key","") === key) connectFinnhub(key);
-  }, 10000);
-}
-
-function setFhSt(msg,color){
-  const el=document.getElementById("fh-status");
-  if(el){el.textContent=msg;el.style.color=color;}
-}
-
-// ════════════════════════════════════════
-// FALLBACK open.er-api
-// ════════════════════════════════════════
-async function fetchRates() {
+// ══════════════════════════════════════════
+// FALLBACK — open.er-api
+// ══════════════════════════════════════════
+async function fetchFallback() {
   try {
     const res  = await fetch("https://open.er-api.com/v6/latest/USD");
     const data = await res.json();
     if(data.result!=="success") throw new Error();
-    fallbackRates = {...data.rates, USD:1};
-    // Set daily opens for pairs not covered by Finnhub
-    setFallbackDailyOpen();
+    fbRates = {...data.rates, USD:1};
+    // Si l'open fallback n'est pas encore défini pour aujourd'hui, on le snapshote
+    if(Object.keys(fbOpen).length===0) {
+      fbOpen = {...fbRates};
+    }
     document.getElementById("last-update").style.display="block";
     document.getElementById("last-update").textContent = "MÀJ "+fmtT(new Date());
-    if(!fhConnected) document.getElementById("stat-source").textContent="open.er-api (≈1min)";
-    setStatus("live");
+    if(!fhConnected) {
+      document.getElementById("stat-source").textContent = "open.er-api (≈1min)";
+      setStatus("live");
+    }
     checkMidnightReset();
     checkAlerts();
     renderDashboard();
@@ -526,78 +406,214 @@ async function fetchRates() {
   }
 }
 
-// ════════════════════════════════════════
+let _renderPending=false;
+function scheduleRender(){
+  if(_renderPending)return;
+  _renderPending=true;
+  requestAnimationFrame(()=>{
+    _renderPending=false;
+    checkAlerts();
+    renderDashboard();
+    if(document.getElementById("tab-catalogue-content").style.display!=="none")renderCatalogue();
+    if(document.getElementById("tab-alertes-content").style.display!=="none")renderAlertList();
+  });
+}
+function connectFinnhub(key) {
+  if(fhWs){try{fhWs.close();}catch(e){}fhWs=null;}
+  clearTimeout(fhReconnTimer);
+  if(!key) return;
+  setFhSt("Connexion WebSocket...","var(--amber)");
+  const ws = new WebSocket(`wss://ws.finnhub.io?token=${key}`);
+
+  ws.onopen = () => {
+    fhConnected = true;
+    activePairs.forEach(p => ws.send(JSON.stringify({type:"subscribe",symbol:"OANDA:"+p.replace("/","_")})));
+    setFhSt("✓ WebSocket live","var(--green)");
+    document.getElementById("stat-source").textContent = "Finnhub ● LIVE";
+    setStatus("live");
+    // Charge les opens depuis Finnhub (même source que les prix live)
+    loadAllFHOpens(key);
+  };
+
+  ws.onmessage = e => {
+    try {
+      const m = JSON.parse(e.data);
+      if(m.type==="trade" && m.data) {
+        m.data.forEach(t => {
+          const pair = t.s.replace("OANDA:","").replace("_","/");
+          fhPrice[pair] = t.p;
+          // Si l'open Finnhub n'est pas encore chargé, on attend le REST
+          // On ne mélange PAS avec fbOpen ici
+        });
+        document.getElementById("last-update").style.display="block";
+        document.getElementById("last-update").textContent="LIVE "+fmtT(new Date());
+        checkMidnightReset();
+        scheduleRender();
+      }
+    } catch(_) {}
+  };
+
+  ws.onerror = () => {
+    fhConnected=false;
+    setFhSt("⚠ Erreur — reconnexion 10s","var(--red)");
+    scheduleReconn(key);
+  };
+  ws.onclose = () => {
+    fhConnected=false;
+    if(loadLS("fp_fh_key","")===key){
+      setFhSt("Perdu — reconnexion 10s","var(--amber)");
+      scheduleReconn(key);
+    }
+  };
+  fhWs = ws;
+}
+
+function scheduleReconn(key){clearTimeout(fhReconnTimer);fhReconnTimer=setTimeout(()=>{if(loadLS("fp_fh_key","")===key)connectFinnhub(key);},10000);}
+function setFhSt(msg,color){const el=document.getElementById("fh-status");if(el){el.textContent=msg;el.style.color=color;}}
+
+// ══════════════════════════════════════════
+// RESET MIDNIGHT UTC
+// ══════════════════════════════════════════
+function checkMidnightReset() {
+  const d = new Date().getUTCDate();
+  if(currentDayUTC===-1){currentDayUTC=d;return;}
+  if(d!==currentDayUTC) {
+    currentDayUTC=d;
+    firedKeys.clear();
+    // Reset opens selon la source active
+    const key = loadLS("fp_fh_key","");
+    if(fhConnected && key) {
+      fhOpen={};
+      loadAllFHOpens(key);
+    } else {
+      fbOpen={...fbRates}; // snapshot actuel comme nouvel open
+    }
+    flashStatus("↺ NEW DAY — opens reset");
+  }
+}
+
+async function forceReloadOpens() {
+  const key = loadLS("fp_fh_key","");
+  firedKeys.clear();
+  if(fhConnected && key) {
+    fhOpen={};
+    await loadAllFHOpens(key);
+  } else {
+    fbOpen={...fbRates};
+    renderDashboard();
+  }
+}
+
+// ══════════════════════════════════════════
 // CHECK ALERTS
-// ════════════════════════════════════════
-function checkAlerts() {
-  alerts.forEach(a => {
-    if(!a.enabled) return;
-    const curr = getCurrent(a.pair);
-    const open = getOpen(a.pair);
-    if(!curr || !open) return;
-    const pips   = calcPips(curr, open, a.pair);
-    if(pips==null) return;
-    const abs    = Math.abs(pips);
-    const bucket = Math.floor(abs/a.pips);
-    const key    = `${a.id}-${bucket}`;
-    if(bucket>0 && !firedKeys.has(key)) {
-      const ok = a.dir==="both"||(a.dir==="up"&&pips>0)||(a.dir==="down"&&pips<0);
-      if(ok) {
+// ══════════════════════════════════════════
+function checkAlerts(){
+  alerts.forEach(a=>{
+    if(!a.enabled)return;
+    const curr=getCurrent(a.pair),open=getOpen(a.pair);
+    if(!curr||!open)return;
+    const pips=calcPips(curr,open,a.pair);if(pips==null)return;
+    const abs=Math.abs(pips),bucket=Math.floor(abs/a.pips),key=`${a.id}-${bucket}`;
+    if(bucket>0&&!firedKeys.has(key)){
+      const ok=a.dir==="both"||(a.dir==="up"&&pips>0)||(a.dir==="down"&&pips<0);
+      if(ok){
         firedKeys.add(key);
-        const entry={id:Date.now(),pair:a.pair,pips:abs,dir:pips>0?"▲":"▼",threshold:a.pips,price:curr,time:new Date()};
-        logEntries.unshift(entry); if(logEntries.length>60)logEntries.pop();
-        newLogCount++; updateLogBadge(); renderLogList(); updateStatBar();
-        sendDiscord(a,pips,abs,curr);
-        sendTelegram(a,pips,abs,curr);
+        const entry={id:Date.now(),pair:a.pair,pips:abs,dir:pips>0?"▲":"▼",threshold:a.pips,price:curr,open,time:new Date()};
+        logEntries.unshift(entry);if(logEntries.length>60)logEntries.pop();
+        newLogCount++;updateLogBadge();renderLogList();updateStatBar();
+        sendDiscord(a,pips,abs,curr,open);
+        sendTelegram(a,pips,abs,curr,open);
       }
     }
   });
 }
 
-// ════════════════════════════════════════
-// RENDER DASHBOARD
-// ════════════════════════════════════════
-function renderDashboard() {
-  const grid = document.getElementById("pair-grid");
-  let html = "";
-  activePairs.forEach(pair => {
-    const curr = getCurrent(pair);
-    const open = getOpen(pair);
-    const pips = calcPips(curr, open, pair);
-    const col  = pipCol(pips);
-    const fired= alerts.some(a=>a.enabled&&a.pair===pair&&pips!=null&&Math.abs(pips)>=a.pips);
-    const pct  = Math.min(Math.abs(pips||0)/300*100,100);
-    const hasData = curr != null;
-    const hasOpen = open != null;
-    html += `
-    <div class="pair-card ${fired?'alert-glow':''}"
-      style="border-left-color:${fired?'var(--amber)':hasData?col:'var(--dim)'};${fired?'border-color:rgba(245,176,0,.5)':''}">
-      <button class="rm" onclick="removePair('${pair}')">✕</button>
-      <div class="pair-name">${pair}</div>
-      ${hasOpen?`<div class="pair-open">Open: ${fmt(open,pair)}</div>`:'<div class="pair-open" style="color:var(--dim)">Open: —</div>'}
-      <div class="pair-price">${fmt(curr,pair)}</div>
-      <div class="pair-pips">
-        <span class="pips-val" style="color:${col}">${pips==null?"—":(pips>0?"+":"")+pips}</span>
-        <span class="pips-label">PIPS</span>
-        ${pips!=null&&pips!==0?`<span style="font-size:11px;color:${col};margin-left:2px">${pips>0?"▲":"▼"}</span>`:""}
-      </div>
-      <div class="pips-bar-wrap">
-        <div class="pips-bar" style="width:${pct}%;background:${col}"></div>
-      </div>
-      ${fired?'<div class="alert-label">⚡ SEUIL ATTEINT</div>':""}
-      ${!hasData?'<div class="no-data">En attente de données...</div>':""}
-    </div>`;
+// ══════════════════════════════════════════
+// RENDER DASHBOARD — rebuild only if structure changed
+// ══════════════════════════════════════════
+let _lastPairList = "";
+
+function renderDashboard(){
+  const grid=document.getElementById("pair-grid");
+  const pairListKey = activePairs.join(",");
+
+  // Rebuild full grid only if pairs list changed
+  if(pairListKey !== _lastPairList){
+    _lastPairList = pairListKey;
+    let html="";
+    activePairs.forEach(pair=>{
+      const id="card-"+pair.replace("/","_");
+      html+=`<div class="pair-card" id="${id}">
+        <button class="rm" onclick="removePair('${pair}')">✕</button>
+        <div class="pair-name">${pair}</div>
+        <div class="pair-open" id="${id}-open">Open: —</div>
+        <div class="pair-price" id="${id}-price">—</div>
+        <div class="pair-pips">
+          <span class="pips-val" id="${id}-pips" style="color:var(--dim)">—</span>
+          <span class="pips-label">PIPS</span>
+          <span id="${id}-arrow" style="font-size:11px;margin-left:2px"></span>
+        </div>
+        <div class="pips-bar-wrap"><div class="pips-bar" id="${id}-bar" style="width:0%"></div></div>
+        <div class="alert-label" id="${id}-alert" style="display:none">⚡ SEUIL ATTEINT</div>
+        <div id="${id}-wait" style="color:var(--dim);font-size:9px;margin-top:4px">En attente...</div>
+      </div>`;
+    });
+    html+=`<div class="add-pair-card" onclick="switchTab('catalogue')"
+      onmouseover="this.style.borderColor='var(--blue)';this.style.color='var(--blue)'"
+      onmouseout="this.style.borderColor='var(--b2)';this.style.color='var(--dim)'">+ AJOUTER PAIRE</div>`;
+    grid.innerHTML=html;
+  }
+
+  // Update only changed values in each card
+  activePairs.forEach(pair=>{
+    const id="card-"+pair.replace("/","_");
+    const card=document.getElementById(id);if(!card)return;
+    const curr=getCurrent(pair),open=getOpen(pair);
+    const pips=calcPips(curr,open,pair);
+    const col=pipCol(pips);
+    const fired=alerts.some(a=>a.enabled&&a.pair===pair&&pips!=null&&Math.abs(pips)>=a.pips);
+    const pct=Math.min(Math.abs(pips||0)/300*100,100);
+
+    // Card border
+    card.style.borderLeftColor=fired?"var(--amber)":curr?col:"var(--dim)";
+    card.style.borderColor=fired?"rgba(245,176,0,.5)":"";
+    if(fired&&!card.classList.contains("alert-glow"))card.classList.add("alert-glow");
+    else if(!fired)card.classList.remove("alert-glow");
+
+    // Open
+    const openEl=document.getElementById(id+"-open");
+    if(openEl)openEl.textContent="Open: "+fmt(open,pair);
+
+    // Price
+    const priceEl=document.getElementById(id+"-price");
+    if(priceEl)priceEl.textContent=fmt(curr,pair);
+
+    // Pips
+    const pipsEl=document.getElementById(id+"-pips");
+    if(pipsEl){pipsEl.textContent=pips==null?"—":(pips>0?"+":"")+pips;pipsEl.style.color=col;}
+
+    // Arrow
+    const arrowEl=document.getElementById(id+"-arrow");
+    if(arrowEl){arrowEl.textContent=pips!=null&&pips!==0?(pips>0?"▲":"▼"):"";arrowEl.style.color=col;}
+
+    // Bar
+    const barEl=document.getElementById(id+"-bar");
+    if(barEl){barEl.style.width=pct+"%";barEl.style.background=col;}
+
+    // Alert label
+    const alertEl=document.getElementById(id+"-alert");
+    if(alertEl)alertEl.style.display=fired?"block":"none";
+
+    // Wait label
+    const waitEl=document.getElementById(id+"-wait");
+    if(waitEl)waitEl.style.display=curr?"none":"block";
   });
-  html += `<div class="add-pair-card" onclick="switchTab('catalogue')"
-    onmouseover="this.style.borderColor='var(--blue)';this.style.color='var(--blue)'"
-    onmouseout="this.style.borderColor='var(--b2)';this.style.color='var(--dim)'">+ AJOUTER PAIRE</div>`;
-  grid.innerHTML = html;
 }
 
-// ════════════════════════════════════════
+// ══════════════════════════════════════════
 // RENDER CATALOGUE
-// ════════════════════════════════════════
-function renderCatalogue() {
+// ══════════════════════════════════════════
+function renderCatalogue(){
   const search=(document.getElementById("cat-search")?.value||"").toLowerCase();
   const filtered=ALL_PAIRS.filter(p=>{
     if(currentCatGroup!=="TOUS"&&!FOREX_GROUPS[currentCatGroup]?.includes(p))return false;
@@ -610,8 +626,7 @@ function renderCatalogue() {
     const pips=calcPips(curr,open,pair);const col=pipCol(pips);
     return`<div class="cat-card ${inD?'in-dash':''}">
       <div style="display:flex;justify-content:space-between;align-items:center">
-        <span class="cat-pair-name">${pair}</span>
-        ${inD?'<div class="cat-dot"></div>':""}
+        <span class="cat-pair-name">${pair}</span>${inD?'<div class="cat-dot"></div>':""}
       </div>
       <div class="cat-price">${fmt(curr,pair)}</div>
       ${pips!=null?`<div class="cat-pips" style="color:${col}">${pips>0?"+":""}${pips} pips</div>`:'<div class="cat-pips" style="color:var(--dim)">— pips</div>'}
@@ -623,7 +638,6 @@ function renderCatalogue() {
 }
 
 function setCatGroup(g,el){currentCatGroup=g;document.querySelectorAll(".group-btn").forEach(b=>b.classList.remove("active"));if(el)el.classList.add("active");renderCatalogue();}
-
 function togglePair(pair){
   if(activePairs.includes(pair)){activePairs=activePairs.filter(p=>p!==pair);}
   else{
@@ -631,16 +645,16 @@ function togglePair(pair){
     if(fhWs&&fhConnected){
       fhWs.send(JSON.stringify({type:"subscribe",symbol:"OANDA:"+pair.replace("/","_")}));
       const key=loadLS("fp_fh_key","");
-      if(key) fetchDailyOpen(pair,key).then(()=>renderDashboard());
+      if(key)fetchFHOpen(pair,key).then(()=>renderDashboard());
     }
   }
   saveLS("fp_pairs",activePairs);renderDashboard();renderCatalogue();updateStatBar();
 }
 function removePair(pair){activePairs=activePairs.filter(p=>p!==pair);saveLS("fp_pairs",activePairs);renderDashboard();renderCatalogue();updateStatBar();}
 
-// ════════════════════════════════════════
+// ══════════════════════════════════════════
 // ALERTES
-// ════════════════════════════════════════
+// ══════════════════════════════════════════
 function populateAlertForm(){
   const b=document.getElementById("al-base"),q=document.getElementById("al-quote");
   if(b.options.length)return;
@@ -677,9 +691,9 @@ function renderAlertList(){
 function toggleAlert(id){const a=alerts.find(x=>x.id===id);if(a)a.enabled=!a.enabled;saveLS("fp_alerts",alerts);renderAlertList();updateStatBar();}
 function removeAlert(id){alerts=alerts.filter(x=>x.id!==id);saveLS("fp_alerts",alerts);renderAlertList();updateStatBar();}
 
-// ════════════════════════════════════════
+// ══════════════════════════════════════════
 // LOG
-// ════════════════════════════════════════
+// ══════════════════════════════════════════
 function renderLogList(){
   const list=document.getElementById("log-list");if(!list)return;
   const label=document.getElementById("log-count-label");
@@ -687,15 +701,19 @@ function renderLogList(){
   if(!logEntries.length){list.innerHTML=`<div style="text-align:center;padding:60px;color:var(--dim);font-size:11px;line-height:2">Aucun déclenchement<br><span style="font-size:9px;color:var(--border)">Les alertes apparaîtront ici</span></div>`;return;}
   list.innerHTML=logEntries.map(e=>`<div class="log-entry fade-in">
     <div class="log-top"><span class="log-pair">${e.pair}</span><span class="log-time">${fmtT(e.time)}</span></div>
-    <div class="log-details"><span class="log-pips">${e.dir} ${e.pips} pips</span><span class="log-th">seuil ${e.threshold}</span><span class="log-price">@ ${fmt(e.price,e.pair)}</span></div>
+    <div class="log-details">
+      <span class="log-pips">${e.dir} ${e.pips} pips</span>
+      <span class="log-th">seuil ${e.threshold}</span>
+      <span class="log-price">@ ${fmt(e.price,e.pair)}</span>
+    </div>
   </div>`).join("");
 }
 function clearLog(){logEntries=[];newLogCount=0;updateLogBadge();renderLogList();document.getElementById("stat-log").textContent="0";}
 function updateLogBadge(){const b=document.getElementById("log-badge");b.style.display=newLogCount>0?"flex":"none";b.textContent=newLogCount>9?"9+":newLogCount;}
 
-// ════════════════════════════════════════
+// ══════════════════════════════════════════
 // STAT BAR
-// ════════════════════════════════════════
+// ══════════════════════════════════════════
 function updateStatBar(){
   document.getElementById("stat-pairs").textContent=activePairs.length;
   document.getElementById("stat-alerts").textContent=alerts.filter(a=>a.enabled).length;
@@ -706,9 +724,9 @@ function updateStatBar(){
   tEl.textContent=(t&&c)?"ON":"OFF";tEl.style.color=(t&&c)?"var(--green)":"var(--dim)";
 }
 
-// ════════════════════════════════════════
+// ══════════════════════════════════════════
 // STATUS
-// ════════════════════════════════════════
+// ══════════════════════════════════════════
 function setStatus(type,msg=""){
   const dot=document.getElementById("status-dot");
   if(type==="live"){dot.textContent="● LIVE";dot.style.color="var(--green)";}
@@ -716,97 +734,98 @@ function setStatus(type,msg=""){
   else{dot.textContent="◌ CONNEXION...";dot.style.color="var(--amber)";}
 }
 function flashStatus(msg){
-  const dot=document.getElementById("status-dot"),prev=dot.textContent,prevCol=dot.style.color;
+  const dot=document.getElementById("status-dot"),prev=dot.textContent,prevC=dot.style.color;
   dot.textContent=msg;dot.style.color="var(--amber)";
-  setTimeout(()=>{dot.textContent=prev;dot.style.color=prevCol;},2000);
+  setTimeout(()=>{dot.textContent=prev;dot.style.color=prevC;},2000);
 }
 
-// ════════════════════════════════════════
+// ══════════════════════════════════════════
 // DISCORD
-// ════════════════════════════════════════
-function sendDiscord(a,pips,abs,price){
+// ══════════════════════════════════════════
+function sendDiscord(a,pips,abs,price,open){
   const wh=loadLS("fp_webhook","");if(!wh)return;
   fetch(wh,{method:"POST",headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({embeds:[{title:`⚡ ALERTE FOREX — ${a.pair}`,color:pips>0?0x00e87c:0xff2850,
+    body:JSON.stringify({embeds:[{
+      title:`⚡ ALERTE FOREX — ${a.pair}`,
+      color:pips>0?0x00e87c:0xff2850,
       fields:[
         {name:"📊 Mouvement daily",value:`**${pips>0?"+":""}${pips} pips** ${pips>0?"▲ HAUSSE":"▼ BAISSE"}`,inline:true},
         {name:"🎯 Seuil",value:`${a.pips} pips`,inline:true},
+        {name:"📅 Open daily",value:fmt(open,a.pair),inline:true},
         {name:"💰 Prix actuel",value:fmt(price,a.pair),inline:true},
-        {name:"📅 Open daily",value:fmt(getOpen(a.pair),a.pair),inline:true},
         {name:"🕐 Heure",value:fmtT(new Date()),inline:true}
-      ],footer:{text:"ForexPIP Tracker — Daily pips"},timestamp:new Date().toISOString()}]})
+      ],
+      footer:{text:"ForexPIP Tracker"},timestamp:new Date().toISOString()
+    }]})
   }).catch(()=>{});
 }
 
-// ════════════════════════════════════════
+// ══════════════════════════════════════════
 // TELEGRAM
-// ════════════════════════════════════════
-function sendTelegram(a,pips,abs,price){
+// ══════════════════════════════════════════
+function sendTelegram(a,pips,abs,price,open){
   const token=loadLS("fp_tg_token",""),chatId=loadLS("fp_tg_chatid","");
   if(!token||!chatId)return;
-  const open=getOpen(a.pair);
   const text=`⚡ *ALERTE FOREX — ${a.pair}*\n`+
     `${pips>0?"+":""}${pips} pips ${pips>0?"▲ HAUSSE":"▼ BAISSE"}\n`+
     `🎯 Seuil: ${a.pips} pips\n`+
     `📅 Open daily: ${fmt(open,a.pair)}\n`+
     `💰 Prix actuel: ${fmt(price,a.pair)}\n`+
     `🕐 ${fmtT(new Date())}`;
-  fetch(`https://api.telegram.org/bot${token}/sendMessage`,{method:"POST",headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({chat_id:chatId,text,parse_mode:"Markdown"})}).catch(()=>{});
+  fetch(`https://api.telegram.org/bot${token}/sendMessage`,{method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({chat_id:chatId,text,parse_mode:"Markdown"})
+  }).catch(()=>{});
 }
 
-// ════════════════════════════════════════
+// ══════════════════════════════════════════
 // NOTIF HANDLERS
-// ════════════════════════════════════════
+// ══════════════════════════════════════════
 function saveWebhook(){saveLS("fp_webhook",document.getElementById("webhook-input").value.trim());updateStatBar();}
 async function testWebhook(){
-  const url=loadLS("fp_webhook","");if(!url){setNSt("discord","⚠ Colle d'abord l'URL","var(--amber)");return;}
-  setNSt("discord","Envoi en cours...","var(--mid)");
+  const url=loadLS("fp_webhook","");if(!url){setNSt("discord","⚠ Colle l'URL d'abord","var(--amber)");return;}
+  setNSt("discord","Envoi...","var(--mid)");
   try{const r=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({embeds:[{title:"✅ ForexPIP Tracker — Test OK !",
-      description:"Webhook Discord configuré 🎯\nTu recevras les alertes daily pips ici.",
-      color:0x1a85ff,footer:{text:"ForexPIP Tracker"},timestamp:new Date().toISOString()}]})});
+    body:JSON.stringify({embeds:[{title:"✅ ForexPIP Tracker — Test OK",description:"Webhook configuré ✓",color:0x1a85ff,footer:{text:"ForexPIP Tracker"},timestamp:new Date().toISOString()}]})});
     setNSt("discord",r.ok||r.status===204?"✓ Webhook fonctionnel !":"⚠ HTTP "+r.status,r.ok||r.status===204?"var(--green)":"var(--red)");
   }catch(e){setNSt("discord","⚠ "+e.message,"var(--red)");}
 }
 function clearWebhook(){document.getElementById("webhook-input").value="";saveLS("fp_webhook","");updateStatBar();setNSt("discord","Effacé","var(--dim)");}
-
 function saveTelegram(){saveLS("fp_tg_token",document.getElementById("tg-token").value.trim());saveLS("fp_tg_chatid",document.getElementById("tg-chatid").value.trim());updateStatBar();}
 async function testTelegram(){
   const token=loadLS("fp_tg_token",""),chatId=loadLS("fp_tg_chatid","");
-  if(!token||!chatId){setNSt("telegram","⚠ Remplis token + Chat ID","var(--amber)");return;}
-  setNSt("telegram","Envoi en cours...","var(--mid)");
+  if(!token||!chatId){setNSt("telegram","⚠ Token + Chat ID requis","var(--amber)");return;}
+  setNSt("telegram","Envoi...","var(--mid)");
   try{const r=await fetch(`https://api.telegram.org/bot${token}/sendMessage`,{method:"POST",
     headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({chat_id:chatId,text:"✅ *ForexPIP Tracker — Test OK !*\nBot Telegram configuré 🎯\nTu recevras les alertes daily pips ici.",parse_mode:"Markdown"})});
-    const d=await r.json();setNSt("telegram",d.ok?"✓ Bot Telegram fonctionnel !":"⚠ "+d.description,d.ok?"var(--green)":"var(--red)");
+    body:JSON.stringify({chat_id:chatId,text:"✅ *ForexPIP Tracker — Test OK*\nBot configuré ✓",parse_mode:"Markdown"})});
+    const d=await r.json();setNSt("telegram",d.ok?"✓ Telegram fonctionnel !":"⚠ "+d.description,d.ok?"var(--green)":"var(--red)");
   }catch(e){setNSt("telegram","⚠ "+e.message,"var(--red)");}
 }
 function clearTelegram(){document.getElementById("tg-token").value="";document.getElementById("tg-chatid").value="";saveLS("fp_tg_token","");saveLS("fp_tg_chatid","");updateStatBar();setNSt("telegram","Effacé","var(--dim)");}
 function setNSt(w,msg,color){const el=document.getElementById(`${w}-status`);if(el){el.textContent=msg;el.style.color=color;}}
 
-// ════════════════════════════════════════
+// ══════════════════════════════════════════
 // FINNHUB KEY
-// ════════════════════════════════════════
+// ══════════════════════════════════════════
 function saveFinnhubKey(){
   const key=document.getElementById("fh-key-input").value.trim();
   if(!key){setFhSt("⚠ Clé vide","var(--amber)");return;}
-  saveLS("fp_fh_key",key);
-  connectFinnhub(key);
+  saveLS("fp_fh_key",key);connectFinnhub(key);
 }
 function clearFinnhubKey(){
-  clearTimeout(fhReconnectTimer);
-  saveLS("fp_fh_key","");
+  clearTimeout(fhReconnTimer);saveLS("fp_fh_key","");
   document.getElementById("fh-key-input").value="";
   if(fhWs){try{fhWs.close();}catch(e){}fhWs=null;}
-  fhConnected=false;
-  setFhSt("Déconnecté — fallback actif","var(--dim)");
+  fhConnected=false;fhPrice={};fhOpen={};
+  setFhSt("Déconnecté — mode fallback","var(--dim)");
   document.getElementById("stat-source").textContent="open.er-api (≈1min)";
+  renderDashboard();
 }
 
-// ════════════════════════════════════════
+// ══════════════════════════════════════════
 // PAUSE / TIMER
-// ════════════════════════════════════════
+// ══════════════════════════════════════════
 function togglePause(){
   paused=!paused;
   const btn=document.getElementById("pause-btn");
@@ -815,13 +834,13 @@ function togglePause(){
   btn.style.background=paused?"rgba(245,176,0,.15)":"#111";
   if(!paused)startTimer();else{clearInterval(refreshTimer);refreshTimer=null;}
 }
-function startTimer(){clearInterval(refreshTimer);if(!paused)refreshTimer=setInterval(()=>{if(!fhConnected)fetchRates();checkMidnightReset();},refreshSecs*1000);}
-function manualFetch(){fetchRates();}
+function startTimer(){clearInterval(refreshTimer);if(!paused)refreshTimer=setInterval(()=>{fetchFallback();checkMidnightReset();},refreshSecs*1000);}
+function manualFetch(){fetchFallback();}
 function setRefresh(s){refreshSecs=s;document.querySelectorAll(".refresh-btn").forEach(b=>b.classList.toggle("active",parseInt(b.textContent)===s));startTimer();}
 
-// ════════════════════════════════════════
+// ══════════════════════════════════════════
 // TABS
-// ════════════════════════════════════════
+// ══════════════════════════════════════════
 const TABS=["dashboard","catalogue","alertes","notifs","journal","settings"];
 function switchTab(id){
   TABS.forEach(t=>{
@@ -833,11 +852,10 @@ function switchTab(id){
   if(id==="journal"){newLogCount=0;updateLogBadge();renderLogList();}
 }
 
-// ════════════════════════════════════════
+// ══════════════════════════════════════════
 // INIT
-// ════════════════════════════════════════
+// ══════════════════════════════════════════
 (async function init(){
-  // Restore configs
   const savedWh=loadLS("fp_webhook",""),savedToken=loadLS("fp_tg_token","");
   const savedChatId=loadLS("fp_tg_chatid",""),savedFhKey=loadLS("fp_fh_key","");
   if(savedWh)document.getElementById("webhook-input").value=savedWh;
@@ -845,16 +863,17 @@ function switchTab(id){
   if(savedChatId)document.getElementById("tg-chatid").value=savedChatId;
   if(savedFhKey)document.getElementById("fh-key-input").value=savedFhKey;
 
-  currentDayUTC = new Date().getUTCDate();
+  currentDayUTC=new Date().getUTCDate();
   populateAlertForm();
   setStatus("loading");
 
-  // Fetch fallback rates first
-  await fetchRates();
+  // Fetch fallback en premier (open ET prix depuis même source)
+  await fetchFallback();
   startTimer();
   updateStatBar();
 
-  // Auto-connect Finnhub
+  // Auto-connect Finnhub si clé sauvegardée
+  // Finnhub chargera ses propres opens via REST après connexion
   if(savedFhKey) connectFinnhub(savedFhKey);
 })();
 </script>
