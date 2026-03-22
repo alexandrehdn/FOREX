@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="fr">
 <head>
 <meta charset="UTF-8"/>
@@ -6,144 +7,128 @@
 <title>ForexPIP Tracker</title>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet"/>
 <style>
-  :root {
-    --bg: #020c16; --panel: #05111f; --card: #081828; --border: #0f2438;
-    --border2: #163550; --bright: #c0daf5; --mid: #5a8aaa; --dim: #264560;
-    --green: #00e87c; --red: #ff2850; --amber: #f5b000; --blue: #1a85ff;
-    --mono: 'IBM Plex Mono', monospace; --sans: 'Space Grotesk', sans-serif;
-  }
-  * { box-sizing:border-box; margin:0; padding:0; }
-  body { background:var(--bg); color:var(--mid); font-family:var(--mono); min-height:100vh; }
-  ::-webkit-scrollbar { width:4px; height:4px; }
-  ::-webkit-scrollbar-track { background:var(--panel); }
-  ::-webkit-scrollbar-thumb { background:var(--border2); border-radius:2px; }
-  select { background:var(--card); border:1px solid var(--border2); color:var(--bright); font-family:var(--mono); font-size:11px; padding:5px 8px; border-radius:4px; cursor:pointer; }
-  select option { background:var(--panel); }
-  input { background:var(--card); border:1px solid var(--border2); color:var(--bright); font-family:var(--mono); font-size:11px; padding:5px 8px; border-radius:4px; outline:none; }
-  input::placeholder { color:var(--dim); }
-  input[type=number] { width:80px; }
-  button { cursor:pointer; font-family:var(--mono); border:none; border-radius:4px; font-size:10px; letter-spacing:.5px; font-weight:500; padding:5px 10px; transition:opacity .15s, background .15s; }
-  #header { background:var(--panel); border-bottom:1px solid var(--border); padding:14px 22px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; position:sticky; top:0; z-index:100; }
-  #logo { display:flex; flex-direction:column; gap:2px; }
-  #status-dot { font-size:9px; letter-spacing:4px; margin-bottom:2px; }
-  #logo-text { font-size:18px; font-weight:700; color:var(--bright); letter-spacing:4px; font-family:var(--sans); }
-  #logo-text span { color:var(--blue); }
-  #header-right { display:flex; flex-direction:column; align-items:flex-end; gap:7px; }
-  #last-update { font-size:10px; color:var(--green); display:none; }
-  #header-btns { display:flex; gap:6px; flex-wrap:wrap; justify-content:flex-end; }
-  #tabs { background:var(--panel); border-bottom:1px solid var(--border); display:flex; padding-left:10px; overflow-x:auto; }
-  .tab-btn { background:none; border:none; border-bottom:2px solid transparent; color:var(--dim); font-family:var(--mono); font-size:10px; letter-spacing:1.5px; font-weight:400; cursor:pointer; padding:12px 16px; border-radius:0; position:relative; transition:color .2s; white-space:nowrap; }
-  .tab-btn.active { color:var(--blue); border-bottom-color:var(--blue); font-weight:600; }
-  .tab-badge { position:absolute; top:6px; right:4px; background:var(--amber); color:#000; border-radius:50%; width:14px; height:14px; display:none; align-items:center; justify-content:center; font-size:8px; font-weight:700; }
-  #main { padding:18px 22px; max-width:1400px; margin:0 auto; }
-  #stat-bar { background:var(--panel); border:1px solid var(--border); border-radius:6px; padding:9px 16px; display:flex; gap:22px; flex-wrap:wrap; margin-bottom:16px; font-size:10px; }
-  .stat-item { color:var(--mid); }
-  .stat-item span { color:var(--bright); }
-  #pair-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(172px, 1fr)); gap:10px; }
-  .pair-card { background:var(--card); border-radius:6px; padding:12px 13px; position:relative; border:1px solid var(--border); border-left:3px solid var(--dim); transition:all .3s; }
-  .pair-card .remove-btn { position:absolute; top:6px; right:8px; background:none; border:none; color:var(--dim); cursor:pointer; font-size:10px; padding:2px 5px; font-family:var(--mono); }
-  .pair-name { font-size:10px; font-weight:600; color:var(--mid); letter-spacing:2px; margin-bottom:5px; }
-  .pair-price { font-size:12px; color:var(--dim); margin-bottom:5px; }
-  .pair-pips { display:flex; align-items:baseline; gap:4px; }
-  .pips-val { font-size:21px; font-weight:700; }
-  .pips-label { font-size:9px; color:var(--dim); }
-  .pips-bar-wrap { height:2px; background:var(--border); border-radius:2px; margin-top:7px; }
-  .pips-bar { height:100%; border-radius:2px; transition:width .5s; }
-  .alert-label { font-size:9px; color:var(--amber); letter-spacing:1px; margin-top:5px; }
-  .add-pair-card { background:transparent; border:1px dashed var(--border2); border-radius:6px; display:flex; align-items:center; justify-content:center; min-height:110px; cursor:pointer; font-size:10px; color:var(--dim); letter-spacing:1px; transition:border-color .2s, color .2s; }
-  #cat-filters { display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:14px; }
-  .group-btn { font-size:9px; letter-spacing:1px; border:1px solid var(--border2); background:var(--panel); color:var(--mid); padding:4px 9px; border-radius:4px; cursor:pointer; font-family:var(--mono); }
-  .group-btn.active { background:var(--blue); color:#fff; border-color:var(--blue); }
-  #cat-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(138px,1fr)); gap:8px; }
-  .cat-card { background:var(--card); border-radius:5px; padding:9px 10px; border:1px solid var(--border); border-left:2px solid var(--dim); display:flex; flex-direction:column; gap:4px; transition:border .2s; }
-  .cat-card.in-dash { border-left-color:var(--blue); border-color:rgba(26,133,255,.3); }
-  .cat-card-top { display:flex; justify-content:space-between; align-items:center; }
-  .cat-pair-name { font-size:10px; font-weight:600; color:var(--bright); letter-spacing:1px; }
-  .cat-dot { width:7px; height:7px; border-radius:50%; background:var(--blue); }
-  .cat-price { font-size:10px; color:var(--dim); }
-  .cat-pips { font-size:10px; font-weight:600; }
-  .cat-btn { font-size:9px; margin-top:2px; padding:4px 0; border-radius:3px; cursor:pointer; font-family:var(--mono); border:none; }
-  #alert-layout { display:grid; grid-template-columns:300px 1fr; gap:16px; align-items:start; }
-  #alert-form-panel { background:var(--panel); border:1px solid var(--border); border-radius:6px; padding:16px; }
-  .form-title { font-size:10px; color:var(--blue); letter-spacing:3px; margin-bottom:14px; }
-  .form-row { display:flex; gap:7px; align-items:center; margin-bottom:10px; flex-wrap:wrap; }
-  .info-box { background:var(--card); border-radius:4px; padding:10px; font-size:10px; color:var(--dim); line-height:1.9; margin-top:14px; }
-  #alert-list { display:flex; flex-direction:column; gap:8px; }
-  .alert-row { background:var(--card); border-radius:5px; padding:10px 12px; border:1px solid var(--border); border-left:3px solid var(--dim); display:flex; align-items:center; gap:8px; transition:border .3s; }
-  .alert-row-info { flex:1; }
-  .alert-pair { font-size:12px; font-weight:600; color:var(--bright); }
-  .alert-meta { font-size:10px; color:var(--dim); margin-top:2px; }
-  .toggle-btn { border-radius:10px; padding:3px 10px; font-size:10px; cursor:pointer; font-family:var(--mono); border:1px solid; }
-  .toggle-on { background:rgba(245,176,0,.2); color:var(--amber); border-color:rgba(245,176,0,.3); }
-  .toggle-off { background:#111; color:var(--dim); border-color:var(--border2); }
-  .remove-alert-btn { background:rgba(255,40,80,.1); color:var(--red); padding:4px 8px; border:none; cursor:pointer; font-family:var(--mono); border-radius:4px; font-size:10px; }
-  #discord-panel { background:var(--panel); border:1px solid var(--border); border-radius:6px; padding:16px; margin-bottom:14px; }
-  .discord-header { display:flex; align-items:center; gap:10px; margin-bottom:14px; }
-  #journal-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
-  #log-list { display:flex; flex-direction:column; gap:7px; }
-  .log-entry { background:var(--card); border-radius:5px; padding:10px 13px; border:1px solid rgba(245,176,0,.2); border-left:3px solid var(--amber); }
-  .log-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; }
-  .log-pair { font-size:12px; font-weight:600; color:var(--bright); }
-  .log-time { font-size:10px; color:var(--dim); }
-  .log-pips { font-size:13px; font-weight:700; color:var(--amber); }
-  .log-details { display:flex; gap:10px; align-items:center; }
-  .log-threshold { font-size:9px; color:var(--dim); }
-  .log-price { font-size:10px; color:var(--mid); }
-  #settings-layout { max-width:500px; display:flex; flex-direction:column; gap:14px; }
-  .settings-panel { background:var(--panel); border:1px solid var(--border); border-radius:6px; padding:16px; }
-  .settings-title { font-size:10px; color:var(--blue); letter-spacing:2px; margin-bottom:12px; }
-  .refresh-btns { display:flex; gap:8px; flex-wrap:wrap; }
-  .refresh-btn { background:var(--card); color:var(--mid); border:1px solid var(--border2); padding:6px 14px; font-size:11px; cursor:pointer; font-family:var(--mono); border-radius:4px; }
-  .refresh-btn.active { background:var(--blue); color:#fff; border-color:var(--blue); }
-  @keyframes alertGlow { 0%,100%{box-shadow:0 0 8px rgba(245,176,0,.3)} 50%{box-shadow:0 0 20px rgba(245,176,0,.6)} }
-  .alert-glow { animation:alertGlow 1.5s ease-in-out infinite; }
-  @keyframes livePulse { 0%,100%{opacity:1} 50%{opacity:.3} }
-  .live-pulse { animation:livePulse 1.2s ease-in-out infinite; }
+:root{--bg:#020c16;--panel:#05111f;--card:#081828;--border:#0f2438;--b2:#163550;--bright:#c0daf5;--mid:#5a8aaa;--dim:#264560;--green:#00e87c;--red:#ff2850;--amber:#f5b000;--blue:#1a85ff;--mono:'IBM Plex Mono',monospace;--sans:'Space Grotesk',sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--mid);font-family:var(--mono);min-height:100vh}
+::-webkit-scrollbar{width:4px;height:4px}::-webkit-scrollbar-track{background:var(--panel)}::-webkit-scrollbar-thumb{background:var(--b2);border-radius:2px}
+select{background:var(--card);border:1px solid var(--b2);color:var(--bright);font-family:var(--mono);font-size:11px;padding:5px 8px;border-radius:4px;cursor:pointer}
+select option{background:var(--panel)}
+input{background:var(--card);border:1px solid var(--b2);color:var(--bright);font-family:var(--mono);font-size:11px;padding:5px 8px;border-radius:4px;outline:none}
+input::placeholder{color:var(--dim)}input[type=number]{width:80px}
+button{cursor:pointer;font-family:var(--mono);border:none;border-radius:4px;font-size:10px;letter-spacing:.5px;font-weight:500;padding:5px 10px;transition:opacity .15s,background .15s}
+#header{background:var(--panel);border-bottom:1px solid var(--border);padding:12px 18px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;position:sticky;top:0;z-index:100}
+#status-dot{font-size:9px;letter-spacing:4px;margin-bottom:2px;color:var(--amber)}
+#logo-text{font-size:17px;font-weight:700;color:var(--bright);letter-spacing:4px;font-family:var(--sans)}
+#logo-text span{color:var(--blue)}
+#header-right{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+#last-update{font-size:10px;color:var(--green);display:none}
+#header-btns{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+#tabs{background:var(--panel);border-bottom:1px solid var(--border);display:flex;padding-left:8px;overflow-x:auto}
+.tab-btn{background:none;border:none;border-bottom:2px solid transparent;color:var(--dim);font-family:var(--mono);font-size:10px;letter-spacing:1.5px;font-weight:400;cursor:pointer;padding:11px 14px;border-radius:0;position:relative;transition:color .2s;white-space:nowrap}
+.tab-btn.active{color:var(--blue);border-bottom-color:var(--blue);font-weight:600}
+.tab-badge{position:absolute;top:6px;right:3px;background:var(--amber);color:#000;border-radius:50%;width:14px;height:14px;display:none;align-items:center;justify-content:center;font-size:8px;font-weight:700}
+#main{padding:16px 18px;max-width:1400px;margin:0 auto}
+#stat-bar{background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:8px 14px;display:flex;gap:18px;flex-wrap:wrap;margin-bottom:14px;font-size:10px}
+.stat-item{color:var(--mid)}.stat-item span{color:var(--bright)}
+#pair-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(165px,1fr));gap:10px}
+.pair-card{background:var(--card);border-radius:6px;padding:12px 13px;position:relative;border:1px solid var(--border);border-left:3px solid var(--dim);transition:all .3s}
+.remove-btn{position:absolute;top:6px;right:8px;background:none;border:none;color:var(--dim);cursor:pointer;font-size:10px;padding:1px 5px;font-family:var(--mono)}
+.pair-name{font-size:10px;font-weight:600;color:var(--mid);letter-spacing:2px;margin-bottom:4px}
+.pair-price{font-size:12px;color:var(--dim);margin-bottom:4px}
+.pair-pips{display:flex;align-items:baseline;gap:4px}
+.pips-val{font-size:21px;font-weight:700}.pips-label{font-size:9px;color:var(--dim)}
+.pips-bar-wrap{height:2px;background:var(--border);border-radius:2px;margin-top:7px}
+.pips-bar{height:100%;border-radius:2px;transition:width .5s}
+.alert-label{font-size:9px;color:var(--amber);letter-spacing:1px;margin-top:5px}
+.add-pair-card{background:transparent;border:1px dashed var(--b2);border-radius:6px;display:flex;align-items:center;justify-content:center;min-height:108px;cursor:pointer;font-size:10px;color:var(--dim);letter-spacing:1px;transition:border-color .2s,color .2s}
+#cat-filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+.group-btn{font-size:9px;letter-spacing:1px;border:1px solid var(--b2);background:var(--panel);color:var(--mid);padding:4px 9px;border-radius:4px;cursor:pointer;font-family:var(--mono)}
+.group-btn.active{background:var(--blue);color:#fff;border-color:var(--blue)}
+#cat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(135px,1fr));gap:8px}
+.cat-card{background:var(--card);border-radius:5px;padding:9px 10px;border:1px solid var(--border);border-left:2px solid var(--dim);display:flex;flex-direction:column;gap:4px;transition:border .2s}
+.cat-card.in-dash{border-left-color:var(--blue);border-color:rgba(26,133,255,.3)}
+.cat-pair-name{font-size:10px;font-weight:600;color:var(--bright);letter-spacing:1px}
+.cat-dot{width:7px;height:7px;border-radius:50%;background:var(--blue)}
+.cat-price{font-size:10px;color:var(--dim)}.cat-pips{font-size:10px;font-weight:600}
+.cat-btn{font-size:9px;margin-top:2px;padding:4px 0;border-radius:3px;cursor:pointer;font-family:var(--mono);border:none}
+#alert-layout{display:grid;grid-template-columns:290px 1fr;gap:14px;align-items:start}
+.panel-box{background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:14px}
+.panel-title{font-size:10px;color:var(--blue);letter-spacing:3px;margin-bottom:12px}
+.form-row{display:flex;gap:7px;align-items:center;margin-bottom:10px;flex-wrap:wrap}
+.info-box{background:var(--card);border-radius:4px;padding:10px;font-size:10px;color:var(--dim);line-height:1.9;margin-top:12px}
+#alert-list{display:flex;flex-direction:column;gap:8px}
+.alert-row{background:var(--card);border-radius:5px;padding:10px 12px;border:1px solid var(--border);border-left:3px solid var(--dim);display:flex;align-items:center;gap:8px;transition:border .3s}
+.alert-row-info{flex:1}.alert-pair{font-size:12px;font-weight:600;color:var(--bright)}
+.alert-meta{font-size:10px;color:var(--dim);margin-top:2px}
+.toggle-btn{border-radius:10px;padding:3px 10px;font-size:10px;cursor:pointer;font-family:var(--mono);border:1px solid}
+.toggle-on{background:rgba(245,176,0,.2);color:var(--amber);border-color:rgba(245,176,0,.3)}
+.toggle-off{background:#111;color:var(--dim);border-color:var(--b2)}
+.remove-btn-sm{background:rgba(255,40,80,.1);color:var(--red);padding:4px 8px;border:none;cursor:pointer;font-family:var(--mono);border-radius:4px;font-size:10px}
+#notif-layout{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start}
+.notif-card{background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:16px}
+.notif-logo{font-size:24px;margin-bottom:8px}
+.notif-title{font-size:13px;font-weight:600;color:var(--bright);margin-bottom:4px}
+.notif-sub{font-size:10px;color:var(--dim);margin-bottom:14px;line-height:1.6}
+.notif-status{font-size:10px;margin-top:8px}
+.step-list{font-size:10px;color:var(--dim);line-height:2.1;margin-top:10px;padding:10px;background:var(--card);border-radius:4px}
+#journal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+#log-list{display:flex;flex-direction:column;gap:7px}
+.log-entry{background:var(--card);border-radius:5px;padding:10px 13px;border:1px solid rgba(245,176,0,.2);border-left:3px solid var(--amber)}
+.log-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.log-pair{font-size:12px;font-weight:600;color:var(--bright)}.log-time{font-size:10px;color:var(--dim)}
+.log-pips{font-size:13px;font-weight:700;color:var(--amber)}
+.log-details{display:flex;gap:10px;align-items:center}
+.log-threshold{font-size:9px;color:var(--dim)}.log-price{font-size:10px;color:var(--mid)}
+#settings-layout{max-width:520px;display:flex;flex-direction:column;gap:14px}
+.settings-title{font-size:10px;color:var(--blue);letter-spacing:2px;margin-bottom:12px}
+.refresh-btns{display:flex;gap:8px;flex-wrap:wrap}
+.refresh-btn{background:var(--card);color:var(--mid);border:1px solid var(--b2);padding:6px 14px;font-size:11px;cursor:pointer;font-family:var(--mono);border-radius:4px}
+.refresh-btn.active{background:var(--blue);color:#fff;border-color:var(--blue)}
+@keyframes alertGlow{0%,100%{box-shadow:0 0 8px rgba(245,176,0,.3)}50%{box-shadow:0 0 22px rgba(245,176,0,.65)}}
+.alert-glow{animation:alertGlow 1.5s ease-in-out infinite}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+.fade-in{animation:fadeIn .3s ease}
+@media(max-width:640px){#alert-layout,#notif-layout{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
-
 <div id="header">
-  <div id="logo">
-    <div id="status-dot" style="color:var(--amber)">◌ CONNEXION...</div>
+  <div>
+    <div id="status-dot">◌ CONNEXION...</div>
     <div id="logo-text">FOREX<span>PIP</span>TRACKER</div>
   </div>
   <div id="header-right">
     <div id="last-update"></div>
     <div id="header-btns">
-      <button id="notif-btn" onclick="requestNotif()" style="background:rgba(245,176,0,.15);color:var(--amber);border:1px solid rgba(245,176,0,.3);display:none">🔔 NOTIFS</button>
       <button onclick="togglePause()" id="pause-btn" style="background:#111;color:var(--mid)">⏸ PAUSE</button>
       <button onclick="resetRef()" style="background:#111;color:var(--mid)">↺ RESET RÉF</button>
       <button onclick="manualFetch()" style="background:rgba(0,232,124,.1);color:var(--green)">⟳ REFRESH</button>
     </div>
   </div>
 </div>
-
 <div id="tabs">
   <button class="tab-btn active" onclick="switchTab('dashboard')" id="tab-dashboard">DASHBOARD</button>
   <button class="tab-btn" onclick="switchTab('catalogue')" id="tab-catalogue">CATALOGUE</button>
   <button class="tab-btn" onclick="switchTab('alertes')" id="tab-alertes">ALERTES</button>
-  <button class="tab-btn" onclick="switchTab('discord')" id="tab-discord">DISCORD</button>
+  <button class="tab-btn" onclick="switchTab('notifs')" id="tab-notifs">NOTIFICATIONS</button>
   <button class="tab-btn" onclick="switchTab('journal')" id="tab-journal">JOURNAL<span class="tab-badge" id="log-badge">0</span></button>
   <button class="tab-btn" onclick="switchTab('settings')" id="tab-settings">CONFIG</button>
 </div>
-
 <div id="main">
-
   <div id="tab-dashboard-content">
     <div id="stat-bar">
       <div class="stat-item">Paires: <span id="stat-pairs">—</span></div>
       <div class="stat-item">Alertes ON: <span id="stat-alerts" style="color:var(--blue)">—</span></div>
       <div class="stat-item">Déclenchements: <span id="stat-log" style="color:var(--amber)">0</span></div>
-      <div class="stat-item">Discord: <span id="stat-discord" style="color:var(--dim)">OFF</span></div>
       <div class="stat-item">Source: <span id="stat-source" style="color:var(--mid)">—</span></div>
+      <div class="stat-item">Discord: <span id="stat-discord" style="color:var(--dim)">OFF</span></div>
+      <div class="stat-item">Telegram: <span id="stat-telegram" style="color:var(--dim)">OFF</span></div>
     </div>
     <div id="pair-grid"></div>
   </div>
-
   <div id="tab-catalogue-content" style="display:none">
     <div id="cat-filters">
-      <input type="text" id="cat-search" placeholder="Rechercher ex: GBP..." oninput="renderCatalogue()" style="width:180px"/>
+      <input type="text" id="cat-search" placeholder="Rechercher ex: GBP..." oninput="renderCatalogue()" style="width:185px"/>
       <button class="group-btn active" onclick="setCatGroup('TOUS',this)">TOUS</button>
       <button class="group-btn" onclick="setCatGroup('MAJORS',this)">MAJORS</button>
       <button class="group-btn" onclick="setCatGroup('EUR CROSSES',this)">EUR</button>
@@ -154,122 +139,116 @@
     </div>
     <div id="cat-grid"></div>
   </div>
-
   <div id="tab-alertes-content" style="display:none">
     <div id="alert-layout">
-      <div id="alert-form-panel">
-        <div class="form-title">NOUVELLE ALERTE</div>
-        <div class="form-row">
-          <select id="al-base"></select>
-          <span style="color:var(--dim)">/</span>
-          <select id="al-quote"></select>
-        </div>
+      <div class="panel-box">
+        <div class="panel-title">NOUVELLE ALERTE</div>
+        <div class="form-row"><select id="al-base"></select><span style="color:var(--dim)">/</span><select id="al-quote"></select></div>
         <div class="form-row">
           <input type="number" id="al-pips" value="120" min="1" max="9999"/>
           <span style="font-size:10px;color:var(--dim)">pips</span>
-          <select id="al-dir">
-            <option value="both">↕ Les deux</option>
-            <option value="up">▲ Hausse</option>
-            <option value="down">▼ Baisse</option>
-          </select>
+          <select id="al-dir"><option value="both">↕ Les deux</option><option value="up">▲ Hausse</option><option value="down">▼ Baisse</option></select>
         </div>
         <button onclick="createAlert()" style="background:var(--green);color:#000;width:100%;padding:9px;font-size:11px">+ CRÉER ALERTE</button>
-        <div class="info-box">
-          <div style="color:var(--mid);margin-bottom:3px">ℹ INFOS</div>
-          <div>• Répète par multiple du seuil</div>
-          <div>• ↺ Reset = pips remis à 0</div>
-          <div>• Push navigateur + Discord</div>
-        </div>
+        <div class="info-box"><div style="color:var(--mid);margin-bottom:3px">ℹ INFOS</div><div>• Répète par multiple du seuil</div><div>• ↺ Reset = pips remis à 0</div><div>• Discord + Telegram intégrés</div></div>
       </div>
       <div id="alert-list"></div>
     </div>
   </div>
-
-  <div id="tab-discord-content" style="display:none">
-    <div id="discord-panel" style="max-width:540px">
-      <div class="discord-header">
-        <span style="font-size:22px">🎮</span>
-        <div>
-          <div style="font-size:13px;font-weight:600;color:var(--bright)">Discord Webhook</div>
-          <div style="font-size:10px;color:var(--dim)">Reçois tes alertes dans un channel Discord</div>
+  <div id="tab-notifs-content" style="display:none">
+    <div id="notif-layout">
+      <div class="notif-card">
+        <div class="notif-logo">🎮</div>
+        <div class="notif-title">Discord Webhook</div>
+        <div class="notif-sub">Alertes dans un channel Discord.<br>✓ Sauvegardé automatiquement</div>
+        <label style="font-size:10px;color:var(--mid);display:block;margin-bottom:6px">URL WEBHOOK</label>
+        <input type="text" id="webhook-input" placeholder="https://discord.com/api/webhooks/..." oninput="saveWebhook()" style="width:100%;margin-bottom:8px"/>
+        <div style="display:flex;gap:7px;flex-wrap:wrap">
+          <button onclick="testWebhook()" style="background:rgba(26,133,255,.15);color:var(--blue);border:1px solid rgba(26,133,255,.3);padding:6px 12px;font-size:11px">▶ TEST</button>
+          <button onclick="clearWebhook()" style="background:rgba(255,40,80,.1);color:var(--red);padding:6px 10px;font-size:11px">EFFACER</button>
+        </div>
+        <div id="discord-status" class="notif-status"></div>
+        <div class="step-list">
+          <div><b style="color:var(--mid)">1.</b> Serveur Discord → clic droit channel</div>
+          <div><b style="color:var(--mid)">2.</b> Modifier → Intégrations → Webhooks</div>
+          <div><b style="color:var(--mid)">3.</b> Nouveau webhook → Copier l'URL</div>
+          <div><b style="color:var(--mid)">4.</b> Coller ci-dessus → TEST ✓</div>
         </div>
       </div>
-      <label style="font-size:10px;color:var(--mid);display:block;margin-bottom:6px;letter-spacing:1px">URL WEBHOOK</label>
-      <input type="text" id="webhook-input" placeholder="https://discord.com/api/webhooks/..." oninput="saveWebhook()" style="width:100%;margin-bottom:8px"/>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button onclick="testWebhook()" style="background:rgba(26,133,255,.15);color:var(--blue);border:1px solid rgba(26,133,255,.3);padding:6px 14px;font-size:11px">▶ TEST WEBHOOK</button>
-        <button onclick="clearWebhook()" style="background:rgba(255,40,80,.1);color:var(--red);padding:6px 14px;font-size:11px">EFFACER</button>
-      </div>
-      <div id="discord-status" style="font-size:10px;margin-top:8px"></div>
-      <div style="margin-top:18px;padding-top:16px;border-top:1px solid var(--border)">
-        <div style="font-size:11px;color:var(--mid);font-weight:600;margin-bottom:10px">📋 CRÉER UN WEBHOOK</div>
-        <div style="font-size:10px;color:var(--dim);line-height:2.2">
-          <div><b style="color:var(--mid)">1.</b> Ton serveur Discord → clic droit sur un channel</div>
-          <div><b style="color:var(--mid)">2.</b> Modifier le channel → Intégrations</div>
-          <div><b style="color:var(--mid)">3.</b> Webhooks → Nouveau webhook</div>
-          <div><b style="color:var(--mid)">4.</b> Copier l'URL → coller ci-dessus</div>
-          <div><b style="color:var(--mid)">5.</b> Cliquer TEST WEBHOOK ✓</div>
+      <div class="notif-card">
+        <div class="notif-logo">✈️</div>
+        <div class="notif-title">Telegram Bot</div>
+        <div class="notif-sub">Alertes directement dans Telegram.<br>✓ Sauvegardé automatiquement</div>
+        <label style="font-size:10px;color:var(--mid);display:block;margin-bottom:6px">BOT TOKEN</label>
+        <input type="text" id="tg-token" placeholder="123456789:ABCdef..." oninput="saveTelegram()" style="width:100%;margin-bottom:8px"/>
+        <label style="font-size:10px;color:var(--mid);display:block;margin-bottom:6px">CHAT ID</label>
+        <input type="text" id="tg-chatid" placeholder="ex: 123456789" oninput="saveTelegram()" style="width:100%;margin-bottom:8px"/>
+        <div style="display:flex;gap:7px;flex-wrap:wrap">
+          <button onclick="testTelegram()" style="background:rgba(0,232,124,.15);color:var(--green);border:1px solid rgba(0,232,124,.3);padding:6px 12px;font-size:11px">▶ TEST</button>
+          <button onclick="clearTelegram()" style="background:rgba(255,40,80,.1);color:var(--red);padding:6px 10px;font-size:11px">EFFACER</button>
+        </div>
+        <div id="telegram-status" class="notif-status"></div>
+        <div class="step-list">
+          <div><b style="color:var(--mid)">1.</b> Telegram → cherche <b style="color:var(--mid)">@BotFather</b></div>
+          <div><b style="color:var(--mid)">2.</b> Tape <b style="color:var(--mid)">/newbot</b> → choisis un nom</div>
+          <div><b style="color:var(--mid)">3.</b> Copie le token → colle ci-dessus</div>
+          <div><b style="color:var(--mid)">4.</b> Cherche <b style="color:var(--mid)">@userinfobot</b> → /start</div>
+          <div><b style="color:var(--mid)">5.</b> Copie ton ID → colle Chat ID → TEST ✓</div>
         </div>
       </div>
     </div>
   </div>
-
   <div id="tab-journal-content" style="display:none">
     <div id="journal-header">
       <div style="font-size:10px;color:var(--mid);letter-spacing:2px" id="log-count-label">0 DÉCLENCHEMENTS</div>
       <button onclick="clearLog()" style="background:#111;color:var(--dim)">VIDER</button>
     </div>
-    <div id="log-list">
-      <div style="text-align:center;padding:60px;color:var(--dim);font-size:11px;letter-spacing:1px;line-height:2">
-        Aucun déclenchement<br><span style="font-size:9px;color:var(--border2)">Les alertes apparaîtront ici</span>
-      </div>
-    </div>
+    <div id="log-list"><div style="text-align:center;padding:60px;color:var(--dim);font-size:11px;line-height:2">Aucun déclenchement<br><span style="font-size:9px;color:var(--border)">Les alertes apparaîtront ici</span></div></div>
   </div>
-
   <div id="tab-settings-content" style="display:none">
     <div id="settings-layout">
-      <div class="settings-panel">
-        <div class="settings-title">🔑 API TWELVEDATA (TEMPS RÉEL)</div>
-        <div style="font-size:10px;color:var(--dim);margin-bottom:10px;line-height:1.8">WebSocket live — clé gratuite sur <b style="color:var(--mid)">twelvedata.com</b></div>
-        <input type="text" id="td-key-input" placeholder="Colle ta clé API ici..." style="width:100%;margin-bottom:8px"/>
+      <div class="panel-box">
+        <div class="settings-title">🔑 FINNHUB API — TEMPS RÉEL LIVE</div>
+        <div style="font-size:10px;color:var(--dim);margin-bottom:10px;line-height:1.8">WebSocket forex live — clé <b style="color:var(--mid)">100% gratuite</b> sur <b style="color:var(--mid)">finnhub.io</b><br><span style="color:var(--green)">✓ Reconnexion automatique au prochain chargement</span></div>
+        <input type="text" id="fh-key-input" placeholder="Colle ta clé Finnhub ici..." style="width:100%;margin-bottom:8px"/>
         <div style="display:flex;gap:8px">
-          <button onclick="saveTDKey()" style="background:rgba(0,232,124,.15);color:var(--green);border:1px solid rgba(0,232,124,.2);padding:6px 14px;font-size:11px">CONNECTER</button>
-          <button onclick="clearTDKey()" style="background:rgba(255,40,80,.1);color:var(--red);padding:6px 10px;font-size:11px">DÉCO</button>
+          <button onclick="saveFinnhubKey()" style="background:rgba(0,232,124,.15);color:var(--green);border:1px solid rgba(0,232,124,.2);padding:6px 14px;font-size:11px">CONNECTER</button>
+          <button onclick="clearFinnhubKey()" style="background:rgba(255,40,80,.1);color:var(--red);padding:6px 10px;font-size:11px">DÉCO</button>
         </div>
-        <div id="td-status" style="font-size:10px;margin-top:8px;color:var(--dim)"></div>
+        <div id="fh-status" style="font-size:10px;margin-top:8px;color:var(--dim)"></div>
+        <div style="margin-top:12px;padding:10px;background:var(--card);border-radius:4px;font-size:10px;color:var(--dim);line-height:2">
+          <div><b style="color:var(--mid)">1.</b> Va sur finnhub.io → Sign up gratuit</div>
+          <div><b style="color:var(--mid)">2.</b> Dashboard → copie ta clé API</div>
+          <div><b style="color:var(--mid)">3.</b> Colle ici → CONNECTER ✓</div>
+        </div>
       </div>
-      <div class="settings-panel">
-        <div class="settings-title">RAFRAÎCHISSEMENT AUTO</div>
-        <div class="refresh-btns" id="refresh-btns">
+      <div class="panel-box">
+        <div class="settings-title">RAFRAÎCHISSEMENT FALLBACK</div>
+        <div style="font-size:10px;color:var(--dim);margin-bottom:10px">Actif si Finnhub non connecté</div>
+        <div class="refresh-btns">
           <button class="refresh-btn" onclick="setRefresh(10)">10s</button>
           <button class="refresh-btn active" onclick="setRefresh(30)">30s</button>
           <button class="refresh-btn" onclick="setRefresh(60)">60s</button>
           <button class="refresh-btn" onclick="setRefresh(120)">120s</button>
         </div>
       </div>
-      <div class="settings-panel">
-        <div class="settings-title">NOTIFICATIONS</div>
-        <div style="display:flex;align-items:center;gap:10px">
-          <div id="notif-dot" style="width:9px;height:9px;border-radius:50%;background:var(--dim)"></div>
-          <span id="notif-label" style="font-size:11px;color:var(--dim)">Désactivées</span>
-          <button id="notif-enable-btn" onclick="requestNotif()" style="background:rgba(245,176,0,.15);color:var(--amber);border:1px solid rgba(245,176,0,.3);font-size:10px;padding:4px 10px">ACTIVER</button>
-        </div>
-      </div>
-      <div class="settings-panel">
+      <div class="panel-box">
         <div class="settings-title">RÉFÉRENCE SESSION</div>
-        <div style="font-size:11px;color:var(--dim);line-height:2;margin-bottom:10px">Remet tous les compteurs à 0 depuis les prix actuels.</div>
+        <div style="font-size:11px;color:var(--dim);line-height:2;margin-bottom:10px">Remet tous les compteurs pips à 0 depuis les prix actuels.</div>
         <button onclick="resetRef()" style="background:rgba(255,40,80,.1);color:var(--red);padding:8px 16px;font-size:11px">↺ RESET LA RÉFÉRENCE</button>
+      </div>
+      <div style="font-size:9px;color:var(--dim);line-height:1.9;padding:2px 4px">
+        Fallback: open.er-api.com · Live: Finnhub WebSocket · Toutes configs sauvegardées automatiquement
       </div>
     </div>
   </div>
-
 </div>
 
 <script>
-const FOREX_GROUPS = {
+const FOREX_GROUPS={
   "MAJORS":["EUR/USD","GBP/USD","USD/JPY","USD/CHF","AUD/USD","USD/CAD","NZD/USD"],
   "EUR CROSSES":["EUR/GBP","EUR/JPY","EUR/CHF","EUR/AUD","EUR/CAD","EUR/NZD","EUR/SEK","EUR/NOK","EUR/DKK","EUR/PLN","EUR/HUF","EUR/CZK","EUR/TRY","EUR/SGD","EUR/ZAR","EUR/MXN"],
-  "GBP CROSSES":["GBP/JPY","GBP/CHF","GBP/AUD","GBP/CAD","GBP/NZD","GBP/SEK","GBP/NOK","GBP/DKK","GBP/PLN","GBP/ZAR","GBP/SGD","GBP/TRY","GBP/MXN"],
+  "GBP CROSSES":["GBP/JPY","GBP/CHF","GBP/AUD","GBP/CAD","GBP/NZD","GBP/SEK","GBP/NOK","GBP/PLN","GBP/ZAR","GBP/SGD","GBP/TRY","GBP/MXN"],
   "JPY CROSSES":["AUD/JPY","CAD/JPY","CHF/JPY","NZD/JPY","SGD/JPY"],
   "AUD/NZD":["AUD/NZD","AUD/CHF","AUD/CAD","AUD/SGD","AUD/HKD","NZD/CHF","NZD/CAD","NZD/SGD","NZD/HKD"],
   "EXOTIQUES":["USD/MXN","USD/ZAR","USD/SEK","USD/NOK","USD/SGD","USD/HKD","USD/PLN","USD/TRY","EUR/HKD","GBP/HKD"]
@@ -278,15 +257,18 @@ const ALL_PAIRS=[...new Set(Object.values(FOREX_GROUPS).flat())];
 const ALL_CURRENCIES=[...new Set(ALL_PAIRS.flatMap(p=>p.split("/")))].sort();
 const DEFAULT_PAIRS=["EUR/USD","GBP/USD","USD/JPY","USD/CHF","AUD/USD","USD/CAD","NZD/USD"];
 
-let rates={},refRates={},activePairs=[...DEFAULT_PAIRS];
-let alerts=[
+function loadLS(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d;}catch(e){return d;}}
+function saveLS(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
+
+let rates={},refRates={};
+let activePairs=loadLS("fp_pairs",DEFAULT_PAIRS);
+let alerts=loadLS("fp_alerts",[
   {id:1,pair:"EUR/USD",pips:100,dir:"both",enabled:true},
   {id:2,pair:"GBP/USD",pips:80,dir:"both",enabled:true},
   {id:3,pair:"USD/JPY",pips:100,dir:"both",enabled:true}
-];
-let log=[],firedKeys=new Set(),paused=false,refreshSecs=30,refreshTimer=null;
-let discordWebhook="",tdApiKey="",tdWs=null,tdConnected=false,newLogCount=0;
-let currentCatGroup="TOUS";
+]);
+let logEntries=[],firedKeys=new Set(),paused=false,refreshSecs=30,refreshTimer=null,newLogCount=0;
+let currentCatGroup="TOUS",fhWs=null,fhConnected=false;
 
 const getPip=p=>p.split("/")[1]==="JPY"?.01:.0001;
 const calcPips=(c,r,p)=>r?Math.round((c-r)/getPip(p)):null;
@@ -295,30 +277,75 @@ const fmt=(r,p)=>r==null?"—":p.split("/")[1]==="JPY"?r.toFixed(3):r.toFixed(5)
 const fmtT=d=>d.toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit",second:"2-digit"});
 const pipCol=p=>p==null?"var(--dim)":p>0?"var(--green)":p<0?"var(--red)":"var(--mid)";
 
-function getPrice(pair){
-  const td=rates._td&&rates._td[pair];
-  if(td)return td;
-  const[b,q]=pair.split("/");return cross(b,q,rates);
+function getPrice(pair){const fh=rates._fh&&rates._fh[pair];if(fh)return fh;const[b,q]=pair.split("/");return cross(b,q,rates);}
+function getRef(pair){const fh=refRates._fh&&refRates._fh[pair];if(fh)return fh;const[b,q]=pair.split("/");return cross(b,q,refRates);}
+
+function connectFinnhub(key){
+  if(fhWs){fhWs.close();fhWs=null;fhConnected=false;}
+  if(!key)return;
+  const ws=new WebSocket(`wss://ws.finnhub.io?token=${key}`);
+  ws.onopen=()=>{
+    activePairs.forEach(p=>ws.send(JSON.stringify({type:"subscribe",symbol:"OANDA:"+p.replace("/","_")})));
+    fhConnected=true;
+    setFhSt("✓ Connecté — données live","var(--green)");
+    document.getElementById("stat-source").textContent="Finnhub ● LIVE";
+    setStatus("live");
+  };
+  ws.onmessage=e=>{
+    try{const m=JSON.parse(e.data);
+      if(m.type==="trade"&&m.data){
+        m.data.forEach(t=>{
+          const pair=t.s.replace("OANDA:","").replace("_","/");
+          if(!rates._fh)rates._fh={};
+          rates._fh[pair]=t.p;
+          if(!refRates._fh&&Object.keys(refRates).length){if(!refRates._fh)refRates._fh={};if(!refRates._fh[pair])refRates._fh[pair]=t.p;}
+        });
+        document.getElementById("last-update").style.display="block";
+        document.getElementById("last-update").textContent="LIVE "+fmtT(new Date());
+        checkAlerts();renderDashboard();renderCatalogue();
+      }
+    }catch(_){}
+  };
+  ws.onerror=()=>{setFhSt("⚠ Erreur — vérifier la clé","var(--red)");fhConnected=false;};
+  ws.onclose=()=>{fhConnected=false;};
+  fhWs=ws;
 }
-function getRef(pair){
-  const td=refRates._td&&refRates._td[pair];
-  if(td)return td;
-  const[b,q]=pair.split("/");return cross(b,q,refRates);
+function setFhSt(msg,color){const el=document.getElementById("fh-status");if(el){el.textContent=msg;el.style.color=color;}}
+
+async function fetchRates(){
+  if(fhConnected)return;
+  try{
+    const res=await fetch("https://open.er-api.com/v6/latest/USD");
+    const data=await res.json();
+    if(data.result!=="success")throw new Error();
+    const r={...data.rates,USD:1};
+    Object.keys(r).forEach(k=>{if(k!=="_fh")rates[k]=r[k];});
+    if(!Object.keys(refRates).length)refRates={...r};
+    document.getElementById("last-update").style.display="block";
+    document.getElementById("last-update").textContent="MÀJ "+fmtT(new Date());
+    document.getElementById("stat-source").textContent="open.er-api (≈1min)";
+    setStatus("live");
+    checkAlerts();renderDashboard();renderCatalogue();renderAlertList();updateStatBar();
+  }catch(e){setStatus("error","⚠ Erreur réseau");}
 }
 
 function sendDiscord(a,pips,abs,price){
-  if(!discordWebhook)return;
-  fetch(discordWebhook,{method:"POST",headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({embeds:[{
-      title:`⚡ ALERTE FOREX — ${a.pair}`,color:pips>0?0x00e87c:0xff2850,
-      fields:[
-        {name:"📊 Mouvement",value:`**${pips>0?"+":""}${pips} pips** ${pips>0?"▲ HAUSSE":"▼ BAISSE"}`,inline:true},
-        {name:"🎯 Seuil",value:`${a.pips} pips`,inline:true},
-        {name:"💰 Prix",value:fmt(price,a.pair),inline:true},
-        {name:"🕐 Heure",value:fmtT(new Date()),inline:true}
-      ],footer:{text:"ForexPIP Tracker"},timestamp:new Date().toISOString()
-    }]})
+  const wh=loadLS("fp_webhook","");if(!wh)return;
+  fetch(wh,{method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({embeds:[{title:`⚡ ALERTE FOREX — ${a.pair}`,color:pips>0?0x00e87c:0xff2850,
+      fields:[{name:"📊 Mouvement",value:`**${pips>0?"+":""}${pips} pips** ${pips>0?"▲ HAUSSE":"▼ BAISSE"}`,inline:true},
+        {name:"🎯 Seuil",value:`${a.pips} pips`,inline:true},{name:"💰 Prix",value:fmt(price,a.pair),inline:true},
+        {name:"🕐 Heure",value:fmtT(new Date()),inline:true}],
+      footer:{text:"ForexPIP Tracker"},timestamp:new Date().toISOString()}]})
   }).catch(()=>{});
+}
+
+function sendTelegram(a,pips,abs,price){
+  const token=loadLS("fp_tg_token",""),chatId=loadLS("fp_tg_chatid","");
+  if(!token||!chatId)return;
+  const text=`⚡ *ALERTE FOREX — ${a.pair}*\n${pips>0?"+":""}${pips} pips ${pips>0?"▲ HAUSSE":"▼ BAISSE"}\n🎯 Seuil: ${a.pips} pips\n💰 Prix: ${fmt(price,a.pair)}\n🕐 ${fmtT(new Date())}`;
+  fetch(`https://api.telegram.org/bot${token}/sendMessage`,{method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({chat_id:chatId,text,parse_mode:"Markdown"})}).catch(()=>{});
 }
 
 function checkAlerts(){
@@ -327,97 +354,39 @@ function checkAlerts(){
     if(!a.enabled)return;
     const c=getPrice(a.pair),r=getRef(a.pair);
     if(!c||!r)return;
-    const pips=calcPips(c,r,a.pair);
-    if(pips==null)return;
+    const pips=calcPips(c,r,a.pair);if(pips==null)return;
     const abs=Math.abs(pips),bucket=Math.floor(abs/a.pips),key=`${a.id}-${bucket}`;
     if(bucket>0&&!firedKeys.has(key)){
       const ok=a.dir==="both"||(a.dir==="up"&&pips>0)||(a.dir==="down"&&pips<0);
       if(ok){
         firedKeys.add(key);
         const entry={id:Date.now(),pair:a.pair,pips:abs,dir:pips>0?"▲":"▼",threshold:a.pips,price:c,time:new Date()};
-        log.unshift(entry);if(log.length>60)log.pop();
-        newLogCount++;updateLogBadge();renderLogList();
-        if(Notification?.permission==="granted")
-          new Notification(`⚡ ${a.pair} — ${abs} pips`,{body:`Seuil ${a.pips} pips ${pips>0?"▲":"▼"} @ ${fmt(c,a.pair)}`});
-        sendDiscord(a,pips,abs,c);
+        logEntries.unshift(entry);if(logEntries.length>60)logEntries.pop();
+        newLogCount++;updateLogBadge();renderLogList();updateStatBar();
+        sendDiscord(a,pips,abs,c);sendTelegram(a,pips,abs,c);
       }
     }
   });
 }
 
-async function fetchRates(){
-  try{
-    const res=await fetch("https://open.er-api.com/v6/latest/USD");
-    const data=await res.json();
-    if(data.result!=="success")throw new Error("API error");
-    const r={...data.rates,USD:1};
-    rates={...rates,...r};
-    document.getElementById("last-update").style.display="block";
-    document.getElementById("last-update").textContent="MÀJ "+fmtT(new Date());
-    document.getElementById("status-dot").textContent="● LIVE";
-    document.getElementById("status-dot").style.color="var(--green)";
-    document.getElementById("stat-source").textContent="open.er-api (≈1min)";
-    if(!Object.keys(refRates).length)refRates={...r};
-    checkAlerts();renderDashboard();renderCatalogue();renderAlertList();updateStatBar();
-  }catch(e){
-    document.getElementById("status-dot").textContent="⚠ Erreur réseau";
-    document.getElementById("status-dot").style.color="var(--red)";
-  }
-}
-
-function connectTD(key){
-  if(tdWs){tdWs.close();tdWs=null;tdConnected=false;}
-  if(!key)return;
-  const symbols=activePairs.join(",");
-  const ws=new WebSocket(`wss://ws.twelvedata.com/v1/quotes/price?apikey=${key}`);
-  ws.onopen=()=>{
-    ws.send(JSON.stringify({action:"subscribe",params:{symbols}}));
-    tdConnected=true;
-    document.getElementById("td-status").textContent="✓ Connecté — données live";
-    document.getElementById("td-status").style.color="var(--green)";
-    document.getElementById("stat-source").textContent="TwelveData ● LIVE";
-  };
-  ws.onmessage=e=>{
-    try{const m=JSON.parse(e.data);
-      if(m.event==="price"&&m.price){
-        const pair=m.symbol?.replace(":","/");
-        if(pair){
-          if(!rates._td)rates._td={};
-          rates._td[pair]=parseFloat(m.price);
-          document.getElementById("last-update").textContent="LIVE "+fmtT(new Date());
-          renderDashboard();checkAlerts();
-        }
-      }
-    }catch(_){}
-  };
-  ws.onerror=()=>{document.getElementById("td-status").textContent="⚠ Erreur clé API";document.getElementById("td-status").style.color="var(--red)";};
-  ws.onclose=()=>{tdConnected=false;};
-  tdWs=ws;
-}
-
 function renderDashboard(){
-  const grid=document.getElementById("pair-grid");
-  let html="";
+  const grid=document.getElementById("pair-grid");let html="";
   activePairs.forEach(pair=>{
     const c=getPrice(pair),r=getRef(pair);
     const pips=c&&r?calcPips(c,r,pair):null;
     const col=pipCol(pips);
     const fired=alerts.some(a=>a.enabled&&a.pair===pair&&pips!=null&&Math.abs(pips)>=a.pips);
     const pct=Math.min(Math.abs(pips||0)/300*100,100);
-    html+=`<div class="pair-card ${fired?'alert-glow':''}" style="border-left-color:${fired?'var(--amber)':col};${fired?'border-color:var(--amber)':''}">
+    html+=`<div class="pair-card ${fired?'alert-glow':''}" style="border-left-color:${fired?'var(--amber)':col};${fired?'border-color:rgba(245,176,0,.5)':''}">
       <button class="remove-btn" onclick="removePair('${pair}')">✕</button>
       <div class="pair-name">${pair}</div>
       <div class="pair-price">${fmt(c,pair)}</div>
-      <div class="pair-pips">
-        <span class="pips-val" style="color:${col}">${pips==null?"—":(pips>0?"+":"")+pips}</span>
-        <span class="pips-label">PIPS</span>
-        ${pips!=null&&pips!==0?`<span style="font-size:12px;color:${col}">${pips>0?"▲":"▼"}</span>`:""}
-      </div>
+      <div class="pair-pips"><span class="pips-val" style="color:${col}">${pips==null?"—":(pips>0?"+":"")+pips}</span><span class="pips-label">PIPS</span>${pips!=null&&pips!==0?`<span style="font-size:12px;color:${col}">${pips>0?"▲":"▼"}</span>`:""}</div>
       <div class="pips-bar-wrap"><div class="pips-bar" style="width:${pct}%;background:${col}"></div></div>
       ${fired?'<div class="alert-label">⚡ SEUIL ATTEINT</div>':""}
     </div>`;
   });
-  html+=`<div class="add-pair-card" onclick="switchTab('catalogue')">+ AJOUTER PAIRE</div>`;
+  html+=`<div class="add-pair-card" onclick="switchTab('catalogue')" onmouseover="this.style.borderColor='var(--blue)';this.style.color='var(--blue)'" onmouseout="this.style.borderColor='var(--b2)';this.style.color='var(--dim)'">+ AJOUTER PAIRE</div>`;
   grid.innerHTML=html;
 }
 
@@ -425,62 +394,45 @@ function renderCatalogue(){
   const search=(document.getElementById("cat-search")?.value||"").toLowerCase();
   const filtered=ALL_PAIRS.filter(p=>{
     if(currentCatGroup!=="TOUS"&&!FOREX_GROUPS[currentCatGroup]?.includes(p))return false;
-    if(search&&!p.toLowerCase().includes(search))return false;
-    return true;
+    if(search&&!p.toLowerCase().includes(search))return false;return true;
   });
   const grid=document.getElementById("cat-grid");if(!grid)return;
   grid.innerHTML=filtered.map(pair=>{
     const inD=activePairs.includes(pair);
     const c=getPrice(pair),r=getRef(pair);
-    const pips=c&&r?calcPips(c,r,pair):null;
-    const col=pipCol(pips);
+    const pips=c&&r?calcPips(c,r,pair):null;const col=pipCol(pips);
     return`<div class="cat-card ${inD?'in-dash':''}">
-      <div class="cat-card-top">
-        <span class="cat-pair-name">${pair}</span>
-        ${inD?'<div class="cat-dot"></div>':""}
-      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center"><span class="cat-pair-name">${pair}</span>${inD?'<div class="cat-dot"></div>':""}</div>
       <div class="cat-price">${fmt(c,pair)}</div>
       ${pips!=null?`<div class="cat-pips" style="color:${col}">${pips>0?"+":""}${pips} pips</div>`:""}
-      <button class="cat-btn" onclick="togglePair('${pair}')"
-        style="background:${inD?'rgba(255,40,80,.1)':'rgba(0,232,124,.1)'};color:${inD?'var(--red)':'var(--green)'}">
-        ${inD?"RETIRER":"+ AJOUTER"}
-      </button>
-    </div>`;
+      <button class="cat-btn" onclick="togglePair('${pair}')" style="background:${inD?'rgba(255,40,80,.1)':'rgba(0,232,124,.1)'};color:${inD?'var(--red)':'var(--green)'}">
+        ${inD?"RETIRER":"+ AJOUTER"}</button></div>`;
   }).join("");
 }
 
-function setCatGroup(g,el){
-  currentCatGroup=g;
-  document.querySelectorAll(".group-btn").forEach(b=>b.classList.remove("active"));
-  if(el)el.classList.add("active");
-  renderCatalogue();
-}
-
+function setCatGroup(g,el){currentCatGroup=g;document.querySelectorAll(".group-btn").forEach(b=>b.classList.remove("active"));if(el)el.classList.add("active");renderCatalogue();}
 function togglePair(pair){
   if(activePairs.includes(pair))activePairs=activePairs.filter(p=>p!==pair);
-  else{activePairs.push(pair);if(tdWs&&tdConnected)tdWs.send(JSON.stringify({action:"subscribe",params:{symbols:pair}}));}
-  renderDashboard();renderCatalogue();updateStatBar();
+  else{activePairs.push(pair);if(fhWs&&fhConnected)fhWs.send(JSON.stringify({type:"subscribe",symbol:"OANDA:"+pair.replace("/","_")}));}
+  saveLS("fp_pairs",activePairs);renderDashboard();renderCatalogue();updateStatBar();
 }
-function removePair(pair){activePairs=activePairs.filter(p=>p!==pair);renderDashboard();renderCatalogue();updateStatBar();}
+function removePair(pair){activePairs=activePairs.filter(p=>p!==pair);saveLS("fp_pairs",activePairs);renderDashboard();renderCatalogue();updateStatBar();}
 
 function populateAlertForm(){
   const b=document.getElementById("al-base"),q=document.getElementById("al-quote");
   if(b.options.length)return;
-  ALL_CURRENCIES.forEach(c=>{b.add(new Option(c,c));q.add(new Option(c,c));});
-  b.value="GBP";q.value="AUD";
+  ALL_CURRENCIES.forEach(c=>{b.add(new Option(c,c));q.add(new Option(c,c));});b.value="GBP";q.value="AUD";
 }
-
 function createAlert(){
   const base=document.getElementById("al-base").value,quote=document.getElementById("al-quote").value;
   const pips=parseInt(document.getElementById("al-pips").value),dir=document.getElementById("al-dir").value;
   if(base===quote||!pips||pips<=0)return;
   alerts.push({id:Date.now(),pair:`${base}/${quote}`,pips,dir,enabled:true});
-  renderAlertList();updateStatBar();
+  saveLS("fp_alerts",alerts);renderAlertList();updateStatBar();
 }
-
 function renderAlertList(){
   const list=document.getElementById("alert-list");if(!list)return;
-  if(!alerts.length){list.innerHTML=`<div style="color:var(--dim);text-align:center;padding:50px;font-size:11px">Aucune alerte</div>`;return;}
+  if(!alerts.length){list.innerHTML=`<div style="color:var(--dim);text-align:center;padding:50px;font-size:11px">Aucune alerte — créez-en une à gauche</div>`;return;}
   list.innerHTML=alerts.map(a=>{
     const c=getPrice(a.pair),r=getRef(a.pair);
     const pips=c&&r?calcPips(c,r,a.pair):null;
@@ -488,141 +440,108 @@ function renderAlertList(){
     const reached=abs!=null&&a.enabled&&abs>=a.pips;
     const ac=a.enabled?(reached?"var(--amber)":"var(--blue)"):"var(--dim)";
     return`<div class="alert-row" style="border-left-color:${ac}${reached?';border-color:rgba(245,176,0,.4)':''}">
-      <div class="alert-row-info">
-        <div class="alert-pair">${a.pair}</div>
+      <div class="alert-row-info"><div class="alert-pair">${a.pair}</div>
         <div class="alert-meta">${a.pips} pips · ${a.dir==="both"?"↕":a.dir==="up"?"▲":"▼"}
-          ${pips!=null?`· <span style="color:${reached?'var(--amber)':'var(--dim)'}">${pips>0?"+":""}${pips} now</span>`:""}
-        </div>
+          ${pips!=null?`· <span style="color:${reached?'var(--amber)':'var(--dim)'}">${pips>0?"+":""}${pips} now</span>`:""}</div>
       </div>
       <button class="toggle-btn ${a.enabled?'toggle-on':'toggle-off'}" onclick="toggleAlert(${a.id})">${a.enabled?"ON":"OFF"}</button>
-      <button class="remove-alert-btn" onclick="removeAlert(${a.id})">✕</button>
+      <button class="remove-btn-sm" onclick="removeAlert(${a.id})">✕</button>
     </div>`;
   }).join("");
 }
-
-function toggleAlert(id){const a=alerts.find(x=>x.id===id);if(a)a.enabled=!a.enabled;renderAlertList();updateStatBar();}
-function removeAlert(id){alerts=alerts.filter(x=>x.id!==id);renderAlertList();updateStatBar();}
+function toggleAlert(id){const a=alerts.find(x=>x.id===id);if(a)a.enabled=!a.enabled;saveLS("fp_alerts",alerts);renderAlertList();updateStatBar();}
+function removeAlert(id){alerts=alerts.filter(x=>x.id!==id);saveLS("fp_alerts",alerts);renderAlertList();updateStatBar();}
 
 function renderLogList(){
   const list=document.getElementById("log-list");if(!list)return;
   const label=document.getElementById("log-count-label");
-  if(label)label.textContent=`${log.length} DÉCLENCHEMENT${log.length!==1?"S":""}`;
-  if(!log.length){list.innerHTML=`<div style="text-align:center;padding:60px;color:var(--dim);font-size:11px;line-height:2">Aucun déclenchement<br><span style="font-size:9px;color:var(--border2)">Les alertes apparaîtront ici</span></div>`;return;}
-  list.innerHTML=log.map(e=>`<div class="log-entry">
+  if(label)label.textContent=`${logEntries.length} DÉCLENCHEMENT${logEntries.length!==1?"S":""}`;
+  if(!logEntries.length){list.innerHTML=`<div style="text-align:center;padding:60px;color:var(--dim);font-size:11px;line-height:2">Aucun déclenchement<br><span style="font-size:9px;color:var(--border)">Les alertes apparaîtront ici</span></div>`;return;}
+  list.innerHTML=logEntries.map(e=>`<div class="log-entry fade-in">
     <div class="log-top"><span class="log-pair">${e.pair}</span><span class="log-time">${fmtT(e.time)}</span></div>
-    <div class="log-details">
-      <span class="log-pips">${e.dir} ${e.pips} pips</span>
-      <span class="log-threshold">seuil ${e.threshold}</span>
-      <span class="log-price">@ ${fmt(e.price,e.pair)}</span>
-    </div>
+    <div class="log-details"><span class="log-pips">${e.dir} ${e.pips} pips</span><span class="log-threshold">seuil ${e.threshold}</span><span class="log-price">@ ${fmt(e.price,e.pair)}</span></div>
   </div>`).join("");
 }
-
-function clearLog(){log=[];newLogCount=0;updateLogBadge();renderLogList();document.getElementById("stat-log").textContent="0";}
-
-function updateLogBadge(){
-  const b=document.getElementById("log-badge");
-  b.style.display=newLogCount>0?"flex":"none";
-  b.textContent=newLogCount>9?"9+":newLogCount;
-}
+function clearLog(){logEntries=[];newLogCount=0;updateLogBadge();renderLogList();document.getElementById("stat-log").textContent="0";}
+function updateLogBadge(){const b=document.getElementById("log-badge");b.style.display=newLogCount>0?"flex":"none";b.textContent=newLogCount>9?"9+":newLogCount;}
 
 function updateStatBar(){
   document.getElementById("stat-pairs").textContent=activePairs.length;
   document.getElementById("stat-alerts").textContent=alerts.filter(a=>a.enabled).length;
-  document.getElementById("stat-log").textContent=log.length;
+  document.getElementById("stat-log").textContent=logEntries.length;
+  const w=loadLS("fp_webhook",""),t=loadLS("fp_tg_token",""),c=loadLS("fp_tg_chatid","");
+  const dEl=document.getElementById("stat-discord"),tEl=document.getElementById("stat-telegram");
+  dEl.textContent=w?"ON":"OFF";dEl.style.color=w?"var(--green)":"var(--dim)";
+  tEl.textContent=(t&&c)?"ON":"OFF";tEl.style.color=(t&&c)?"var(--green)":"var(--dim)";
 }
 
 function resetRef(){
-  refRates={...rates};
-  if(rates._td)refRates._td={...rates._td};
-  firedKeys.clear();log=[];newLogCount=0;
+  refRates={...rates};if(rates._fh)refRates._fh={...rates._fh};
+  firedKeys.clear();logEntries=[];newLogCount=0;
   updateLogBadge();renderLogList();renderDashboard();renderCatalogue();renderAlertList();updateStatBar();
-  document.getElementById("status-dot").textContent="↺ RÉF RESET";
-  setTimeout(()=>{document.getElementById("status-dot").textContent="● LIVE";},1500);
+  const dot=document.getElementById("status-dot");const prev=dot.textContent;
+  dot.textContent="↺ RÉF RESET";dot.style.color="var(--amber)";
+  setTimeout(()=>{dot.textContent=prev;dot.style.color="var(--green)";},1500);
 }
 
+function setStatus(type,msg=""){
+  const dot=document.getElementById("status-dot");
+  if(type==="live"){dot.textContent="● LIVE";dot.style.color="var(--green)";}
+  else if(type==="error"){dot.textContent=msg||"⚠ Erreur";dot.style.color="var(--red)";}
+  else{dot.textContent="◌ CONNEXION...";dot.style.color="var(--amber)";}
+}
+
+function saveWebhook(){saveLS("fp_webhook",document.getElementById("webhook-input").value.trim());updateStatBar();}
 async function testWebhook(){
-  const url=document.getElementById("webhook-input").value.trim();
-  if(!url){setDiscordSt("⚠ Colle d'abord l'URL","var(--amber)");return;}
-  setDiscordSt("Envoi en cours...","var(--mid)");
-  try{
-    const r=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({embeds:[{title:"✅ ForexPIP Tracker — Test réussi !",description:"Webhook configuré. Tu recevras les alertes ici.",color:0x1a85ff,footer:{text:"ForexPIP Tracker"},timestamp:new Date().toISOString()}]})});
-    setDiscordSt(r.ok||r.status===204?"✓ Webhook fonctionnel !":"⚠ Erreur HTTP "+r.status,r.ok||r.status===204?"var(--green)":"var(--red)");
-  }catch(e){setDiscordSt("⚠ "+e.message,"var(--red)");}
+  const url=loadLS("fp_webhook","");if(!url){setNSt("discord","⚠ Colle d'abord l'URL","var(--amber)");return;}
+  setNSt("discord","Envoi en cours...","var(--mid)");
+  try{const r=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({embeds:[{title:"✅ ForexPIP Tracker — Test réussi !",description:"Webhook configuré 🎯",color:0x1a85ff,footer:{text:"ForexPIP Tracker"},timestamp:new Date().toISOString()}]})});
+    setNSt("discord",r.ok||r.status===204?"✓ Webhook fonctionnel !":"⚠ Erreur HTTP "+r.status,r.ok||r.status===204?"var(--green)":"var(--red)");
+  }catch(e){setNSt("discord","⚠ "+e.message,"var(--red)");}
 }
-function setDiscordSt(msg,color){const el=document.getElementById("discord-status");el.textContent=msg;el.style.color=color;}
-function saveWebhook(){discordWebhook=document.getElementById("webhook-input").value.trim();const s=document.getElementById("stat-discord");s.textContent=discordWebhook?"ON":"OFF";s.style.color=discordWebhook?"var(--green)":"var(--dim)";}
-function clearWebhook(){document.getElementById("webhook-input").value="";discordWebhook="";saveWebhook();setDiscordSt("Webhook effacé","var(--dim)");}
+function clearWebhook(){document.getElementById("webhook-input").value="";saveLS("fp_webhook","");updateStatBar();setNSt("discord","Webhook effacé","var(--dim)");}
 
-function saveTDKey(){
-  const key=document.getElementById("td-key-input").value.trim();
-  if(!key){document.getElementById("td-status").textContent="⚠ Clé vide";return;}
-  tdApiKey=key;document.getElementById("td-status").style.color="var(--amber)";
-  document.getElementById("td-status").textContent="Connexion...";connectTD(key);
+function saveTelegram(){saveLS("fp_tg_token",document.getElementById("tg-token").value.trim());saveLS("fp_tg_chatid",document.getElementById("tg-chatid").value.trim());updateStatBar();}
+async function testTelegram(){
+  const token=loadLS("fp_tg_token",""),chatId=loadLS("fp_tg_chatid","");
+  if(!token||!chatId){setNSt("telegram","⚠ Remplis token + Chat ID","var(--amber)");return;}
+  setNSt("telegram","Envoi en cours...","var(--mid)");
+  try{const r=await fetch(`https://api.telegram.org/bot${token}/sendMessage`,{method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({chat_id:chatId,text:"✅ *ForexPIP Tracker — Test réussi !*\nTon bot Telegram est configuré 🎯",parse_mode:"Markdown"})});
+    const data=await r.json();setNSt("telegram",data.ok?"✓ Bot Telegram fonctionnel !":"⚠ "+data.description,data.ok?"var(--green)":"var(--red)");
+  }catch(e){setNSt("telegram","⚠ "+e.message,"var(--red)");}
 }
-function clearTDKey(){
-  tdApiKey="";if(tdWs){tdWs.close();tdWs=null;}tdConnected=false;
-  document.getElementById("td-key-input").value="";
-  document.getElementById("td-status").textContent="Déconnecté — fallback actif";
-  document.getElementById("td-status").style.color="var(--dim)";
-  document.getElementById("stat-source").textContent="open.er-api (≈1min)";
-}
+function clearTelegram(){document.getElementById("tg-token").value="";document.getElementById("tg-chatid").value="";saveLS("fp_tg_token","");saveLS("fp_tg_chatid","");updateStatBar();setNSt("telegram","Telegram effacé","var(--dim)");}
+function setNSt(w,msg,color){const el=document.getElementById(`${w}-status`);if(el){el.textContent=msg;el.style.color=color;}}
 
-function requestNotif(){
-  if(typeof Notification==="undefined")return;
-  Notification.requestPermission().then(p=>{
-    if(p==="granted"){
-      document.getElementById("notif-dot").style.background="var(--green)";
-      document.getElementById("notif-label").style.color="var(--green)";
-      document.getElementById("notif-label").textContent="Autorisées";
-      document.getElementById("notif-enable-btn").style.display="none";
-      document.getElementById("notif-btn").style.display="none";
-    }
-  });
-}
+function saveFinnhubKey(){const key=document.getElementById("fh-key-input").value.trim();if(!key){setFhSt("⚠ Clé vide","var(--amber)");return;}saveLS("fp_fh_key",key);setFhSt("Connexion en cours...","var(--amber)");connectFinnhub(key);}
+function clearFinnhubKey(){saveLS("fp_fh_key","");document.getElementById("fh-key-input").value="";if(fhWs){fhWs.close();fhWs=null;}fhConnected=false;setFhSt("Déconnecté — fallback actif","var(--dim)");document.getElementById("stat-source").textContent="open.er-api (≈1min)";}
 
-function togglePause(){
-  paused=!paused;
-  const btn=document.getElementById("pause-btn");
-  btn.textContent=paused?"▶ REPRENDRE":"⏸ PAUSE";
-  btn.style.color=paused?"var(--amber)":"var(--mid)";
-  btn.style.background=paused?"rgba(245,176,0,.15)":"#111";
-  if(!paused)startTimer();else{clearInterval(refreshTimer);refreshTimer=null;}
-}
-function startTimer(){clearInterval(refreshTimer);if(!paused)refreshTimer=setInterval(()=>{if(!tdConnected)fetchRates();},refreshSecs*1000);}
-function manualFetch(){if(!tdConnected)fetchRates();}
-function setRefresh(s){
-  refreshSecs=s;
-  document.querySelectorAll(".refresh-btn").forEach(b=>b.classList.toggle("active",parseInt(b.textContent)===s));
-  startTimer();
-}
+function togglePause(){paused=!paused;const btn=document.getElementById("pause-btn");btn.textContent=paused?"▶ REPRENDRE":"⏸ PAUSE";btn.style.color=paused?"var(--amber)":"var(--mid)";btn.style.background=paused?"rgba(245,176,0,.15)":"#111";if(!paused)startTimer();else{clearInterval(refreshTimer);refreshTimer=null;}}
+function startTimer(){clearInterval(refreshTimer);if(!paused)refreshTimer=setInterval(()=>{if(!fhConnected)fetchRates();},refreshSecs*1000);}
+function manualFetch(){fetchRates();}
+function setRefresh(s){refreshSecs=s;document.querySelectorAll(".refresh-btn").forEach(b=>b.classList.toggle("active",parseInt(b.textContent)===s));startTimer();}
 
-const TABS=["dashboard","catalogue","alertes","discord","journal","settings"];
+const TABS=["dashboard","catalogue","alertes","notifs","journal","settings"];
 function switchTab(id){
-  TABS.forEach(t=>{
-    document.getElementById(`tab-${t}-content`).style.display=t===id?"block":"none";
-    document.getElementById(`tab-${t}`).classList.toggle("active",t===id);
-  });
+  TABS.forEach(t=>{document.getElementById(`tab-${t}-content`).style.display=t===id?"block":"none";document.getElementById(`tab-${t}`).classList.toggle("active",t===id);});
   if(id==="catalogue")renderCatalogue();
   if(id==="alertes"){populateAlertForm();renderAlertList();}
   if(id==="journal"){newLogCount=0;updateLogBadge();renderLogList();}
 }
 
 (async function init(){
-  populateAlertForm();
-  if(Notification?.permission==="granted"){
-    document.getElementById("notif-dot").style.background="var(--green)";
-    document.getElementById("notif-label").style.color="var(--green)";
-    document.getElementById("notif-label").textContent="Autorisées";
-    document.getElementById("notif-enable-btn").style.display="none";
-  } else if(Notification?.permission!=="denied"){
-    document.getElementById("notif-btn").style.display="inline-block";
-  }
-  await fetchRates();
-  startTimer();
-  updateStatBar();
+  const savedWh=loadLS("fp_webhook",""),savedToken=loadLS("fp_tg_token",""),savedChatId=loadLS("fp_tg_chatid",""),savedFhKey=loadLS("fp_fh_key","");
+  if(savedWh)document.getElementById("webhook-input").value=savedWh;
+  if(savedToken)document.getElementById("tg-token").value=savedToken;
+  if(savedChatId)document.getElementById("tg-chatid").value=savedChatId;
+  if(savedFhKey)document.getElementById("fh-key-input").value=savedFhKey;
+  populateAlertForm();setStatus("loading");
+  await fetchRates();startTimer();updateStatBar();
+  if(savedFhKey){setFhSt("Reconnexion automatique...","var(--amber)");connectFinnhub(savedFhKey);}
 })();
 </script>
+
 </body>
 </html>
